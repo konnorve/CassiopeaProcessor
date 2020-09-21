@@ -79,7 +79,7 @@ def saveVariableParams():
         [angleOutputDir, 'place where all the data is stored'],
         [pathOfCurrentParamDF, 'path of the latest param dataframe for the latest segment'],
         [framesInChunk, 'absolute number of frames in specific video chunk'],
-        [lastFrameOfPreviousChunk, 'the last frame the occured before this recording chunk'],
+        [lastFrameOfPreviousChunk, 'the last frame the occurred before this recording chunk'],
         [lastFrameOfThisChunk, 'the last frame that occurs in this recording chunk'],
         [isMoving, 'if the Jellyfish was moving at the end of the last video'],
         [lastStationaryCentroid, 'used in analysis to detect movement. Passed in return statement and as a parameter.'],
@@ -894,7 +894,7 @@ def differenceAngleFinder(files):
                 counter += 1
 
     except Exception as error:
-        print('{} error occured.'.format(error))
+        print('{} error occurred.'.format(error))
         print("index: {}, isMoving: {}, isQStat: {}, centroid: {}".format(i,
                                                                        isMoving,
                                                                        isQuestionablyStationary,
