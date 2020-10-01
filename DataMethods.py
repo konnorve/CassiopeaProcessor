@@ -32,6 +32,33 @@ def makeOutDir(outputDir, folderName, DEBUG=False):
         if DEBUG: print('dir %s already exists' % outdir)
     return outdir
 
+def getCSVFilePaths(videoImageDir):
+    """
+    method returns list of sorted, jpg files from inputted stack directory
+
+    :param stackDirectory: directory of FFMPEG image stack
+    :return: sorted list of frame file paths
+    """
+
+    files = [file for file in sorted(videoImageDir.iterdir()) if file.suffix == '.csv']
+
+    return files
+
+
+def getFrameFilePaths(videoImageDir):
+    """
+    method returns list of sorted, jpg files from inputted stack directory
+
+    :param stackDirectory: directory of FFMPEG image stack
+    :return: sorted list of frame file paths
+    """
+
+    imgPaths = [imgPath for imgPath in sorted(videoImageDir.iterdir()) if imgPath.suffix == '.jpg']
+
+    return imgPaths
+
+def readCSV2pandasDF(CSVpath):
+    return pd.read_csv(str(CSVpath), index_col=0)
 
 def replaceDir(outputDir):
     folder = str(outputDir)

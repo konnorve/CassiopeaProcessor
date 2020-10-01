@@ -64,29 +64,5 @@ def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
     plt.close()
 
 
-def dynamicRangeImg(peaksOnBinaryImage, fileSubset, peak2InflectionDiff, peak2TroughDiff):
-    dynamicRangeImagesMasked = []
-
-    # getting dynamic range images for testing
-    for i, peak in enumerate(peaksOnBinaryImage):
-        troughInfile = fileSubset[peak + peak2TroughDiff]
-        relaxedInfile = fileSubset[peak + peak2InflectionDiff]
-        peakInfile = fileSubset[peak]
-
-        troughImg = im.getJellyGrayImageFromFile(troughInfile)
-        relaxedImg = im.getJellyGrayImageFromFile(relaxedInfile)
-        peakImg = im.getJellyGrayImageFromFile(peakInfile)
-
-
-        # misnomer
-        peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
-        binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05)
-
-        dynamicRangeImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
-
-        dynamicRangeImagesMasked.append(dynamicRangeImg)
-
-    return np.average(dynamicRangeImagesMasked, axis=0)
-
 
 
