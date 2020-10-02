@@ -172,7 +172,6 @@ def initialize_params(files, startingFrameNum):
         else:
             i += 1
 
-    # TODO: mutuate as necessary. Add a single pulse peak to orientation frames with named chunk&movementSegment
     for i, peak in enumerate(peaksOnBinaryImage):
         relaxedInfile = fileSubset[peak + peak2InflectionDiff]
         testInfile = fileSubset[peak + peak2InflectionDiff + inflectionTestDiff]
@@ -460,8 +459,6 @@ def differenceAngleFinder(files):
     finally:
         saveOutData()
 
-        if DEBUG: print(movingPeaks)
-
 
 def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     # any parameters that are not imputed into the function are set automatically
@@ -498,7 +495,7 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     # automatically initialized parameters in initialization method
     global lastFrameOfPreviousChunk  # the last frame the occured before this recording chunk
     global framesInChunk  # absolute number of frames in specific video chunk
-
+    
     # changes for each movement segment. reinitialized in each segment folder
     global movementSegment  # the latest segment number across all video chunks (segment = non-moving period)
     global lowerThreshold  # lower threshold to create binary image of jelly to assess area (for downturns)
