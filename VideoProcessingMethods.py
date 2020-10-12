@@ -231,21 +231,6 @@ def initialize_params(files, startingFrameNum):
 
 def differenceAngleFinder(files):
 
-    #none of these should change in this method
-    # global movementSegment  # the latest segment number across all video chunks (segment = non-moving period)
-    # global lowerThreshold  # lower threshold to create binary image of jelly to assess area (for downturns)
-    # global peak2InflectionDiff  # the number of frames past the peak where the inflection point occurs (this should always be negative)
-    # global peak2TroughDiff  # the number of frames past the peak where the lowest area is found on average
-    # global postPeakRefractoryPeriod  # the number of frames to preclude from analysis
-    # global inflectionTestDiff  # the number of frames after inflection point where the difference in calculated
-    # global inflectionTestBinaryThreshold  # the ideal threshold to locate the area of difference
-    # global chosenSD  # the sd of the chosen test diff and threshold when they were initialized
-    # global numConsecutiveDrops  # the number of consecutive drops needed to count something as a downturn
-
-    global isMoving
-    global isQuestionablyStationary
-    global lastStationaryCentroid
-
     i = 0
 
     # movement parameters
@@ -253,6 +238,7 @@ def differenceAngleFinder(files):
     isMoving = False
     isQuestionablyStationary = False
     centroidBefore = None
+    lastStationaryCentroid = None
     counter = 0
     peak = 0
     pulseCountInQuestionablyStationary = 0
@@ -519,11 +505,11 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     # initializing variables from param df
     # intitalizing variable that are constant for entire recording
     recordingName = params_chunkRow['RecordingName']
-    recordingHomeDirPath = Path(params_chunkRow['SavioRecordingHomeDirPath'])
+    recordingHomeDirPath = Path(params_chunkRow['RecordingDirPath'])
     framerate = params_chunkRow['FrameRate']
 
     # intitalizing variables that characterize chunk
-    videoImageStackDir = Path(params_chunkRow['SavioChunkStackPath'])
+    videoImageStackDir = Path(params_chunkRow['SavioChunkPath'])
     chunkName = params_chunkRow['ChunkName']
     
     # parameters that were manually initialized

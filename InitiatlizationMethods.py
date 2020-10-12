@@ -395,7 +395,7 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
     return inflectionTestDiff, inflectionTestBinaryThreshold, chosenSD
 
 
-def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, recordingOutputDir, macintosh):
+def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, recordingHomeDir, macintosh):
     global MAC
     MAC = macintosh
 
@@ -404,7 +404,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     # static variables across single recording that must be read in from df
     recordingName = preInitializationDf.iloc[0]['RecordingName']
-    initializationOutputDir = dm.makeOutDir(recordingOutputDir, 'InitializationVerification')
+    initializationOutputDir = dm.makeOutDir(recordingHomeDir, 'InitializationVerification')
     framerate = preInitializationDf.iloc[0]['FrameRate']
     framesInRecording = sum(preInitializationDf['NumFramesInChunk'].tolist())  # not saved in final DF
     lengthOfRecording = timedelta(0, framesInRecording/framerate)
