@@ -1,0 +1,22 @@
+import multiprocessing as mp
+import VideoProcessingMethods as vpm
+import DataMethods as dm
+from pathlib import Path
+
+postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Home/Initialization_DF/PinkTrainingData_Home_PostInitializationDF.csv')
+
+params_df = dm.readCSV2pandasDF(postInit_DF_path)
+
+numChunks = len(params_df)
+
+print(params_df)
+
+for i in range(numChunks):
+    params_df = dm.readCSV2pandasDF(postInit_DF_path)
+    params_chunkRow = params_df.iloc[i]
+    print(params_chunkRow['ChunkName'])
+
+
+if __name__ == '__main__':
+    with mp.Pool() as p:
+        p.starmap(vpm.runFullVideoAnalysis, zip(range(numChunks), [postInit_DF_path]*numChunks))
