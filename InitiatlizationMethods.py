@@ -52,7 +52,7 @@ def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
         for x in peaks:
             ax1.axvspan(x, x + refractionaryPeriod, alpha=0.2, color='red')
 
-    plt.savefig(str(outpath))
+    plt.savefig(str(outpath), bbox_inches='tight')
     plt.close()
 
 def downturnFinder(files, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff, DEBUG = False):
@@ -533,7 +533,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     if CHIME: dm.chime(MAC, 'input time')
     while True:
-        plotOutpath = initializationOutputDir / 'areaVerificationPlot.png'
+        plotOutpath = initializationOutputDir / 'areaVerificationPlot.jpg'
         saveAreasPlot(binaryImageAreas, peaksOnBinaryImage, plotOutpath,
                       [peak2InflectionDiff, peak2InflectionDiff + 5, peak2TroughDiff],
                       postPeakRefractoryPeriod)
