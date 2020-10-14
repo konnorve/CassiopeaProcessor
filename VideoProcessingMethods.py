@@ -22,7 +22,7 @@ import shutil
 DEBUG = True
 
 CONFIRMATIONIMAGES = False
-confirmationImagesPath = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_8/thresholdingAndAutomationTesting_July30/ScrupulousData')
+confirmationImagesPath = Path('')
 
 ########################################################################################################################
 
