@@ -560,6 +560,3 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
 
     reinitializeElapsedTime()
     saveSegmentVariableParams()
-
-
-# TODO: Test 60 fps system to see how accurate it is compared to 120 fps

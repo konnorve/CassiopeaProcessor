@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 import shutil
 import DataMethods as dm
+import concurrent.futures
 
 ############################################################################
 
@@ -53,7 +54,7 @@ image_stack_dir = sorted(stackDir for i in range(len(chunk_paths)))
 ############################################################################
 # create a directory for each chunk in image stacks
 if __name__ == '__main__':
-    with mp.Pool() as p:
+    with mp.Pool(24) as p:
         p.starmap(makeOutDir, zip(image_stack_dir, chunk_names))
 
 print('directories made')
@@ -64,9 +65,13 @@ img_stack_dirs = sorted(stackDir / direc for direc in os.listdir(stackDir) if di
 print('ffmpeg start')
 
 # run ffmpeg on each and save to scratch directory
+# if __name__ == '__main__':
+#     with mp.Pool(24) as p:
+#         p.starmap(runFFMPEG, zip(chunk_paths, img_stack_dirs))
+
 if __name__ == '__main__':
-    with mp.Pool(24) as p:
-        p.starmap(runFFMPEG, zip(chunk_paths, img_stack_dirs))
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.map(runFFMPEG, zip(chunk_paths, img_stack_dirs))
 
 print('ffmpeg complete')
 
