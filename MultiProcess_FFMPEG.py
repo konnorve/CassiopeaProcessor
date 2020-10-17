@@ -9,15 +9,15 @@ import concurrent.futures
 ############################################################################
 
 # in the case of Savio, parent directory would be scratch/jellyname/recording name
-parent_Dir = Path('/global/scratch/users/lilianzhang/Pink/20200707_Pink_218pm_cam2_1')
-#parent_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Scratch')
+# parent_Dir = Path('/global/scratch/users/lilianzhang/Pink/20200707_Pink_218pm_cam2_1')
+parent_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Scratch/TaylorS')
 
 # directory for video chunks within recording
 videoDir = parent_Dir / 'Video_Chunks'
 
 # home directory path for the recording
-home_Dir = Path('/global/home/groups/fc_xenopus/Pink/20200707_Pink_218pm_cam2_1')
-#home_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Home')
+# home_Dir = Path('/global/home/groups/fc_xenopus/Pink/20200707_Pink_218pm_cam2_1')
+home_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Home/TaylorS')
 
 #Frame rate of recording
 framerate = 120
@@ -65,13 +65,16 @@ img_stack_dirs = sorted(stackDir / direc for direc in os.listdir(stackDir) if di
 print('ffmpeg start')
 
 # run ffmpeg on each and save to scratch directory
-# if __name__ == '__main__':
-#     with mp.Pool(24) as p:
-#         p.starmap(runFFMPEG, zip(chunk_paths, img_stack_dirs))
+if __name__ == '__main__':
+    with mp.Pool(24) as p:
+        p.starmap(runFFMPEG, zip(chunk_paths, img_stack_dirs))
+
+# join method?
+# close method?
 
 if __name__ == '__main__':
     with concurrent.futures.ProcessPoolExecutor() as executor:
-        executor.map(runFFMPEG, zip(chunk_paths, img_stack_dirs))
+        executor.map(runFFMPEG, chunk_paths, img_stack_dirs)
 
 print('ffmpeg complete')
 
