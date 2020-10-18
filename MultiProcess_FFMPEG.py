@@ -65,9 +65,9 @@ img_stack_dirs = sorted(stackDir / direc for direc in os.listdir(stackDir) if di
 print('ffmpeg start')
 
 # run ffmpeg on each and save to scratch directory
-if __name__ == '__main__':
-    with mp.Pool(24) as p:
-        p.starmap(runFFMPEG, zip(chunk_paths, img_stack_dirs))
+# if __name__ == '__main__':
+#     with mp.Pool(24) as p:
+#         p.starmap(runFFMPEG, zip(chunk_paths, img_stack_dirs))
 
 # join method?
 # close method?

@@ -57,10 +57,12 @@ def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
 
 def downturnFinder(files, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff, DEBUG = False):
 
-    print('searching for peaks (downturnfinder)')
+
 
     i = 0
     numFiles = len(files)
+
+    print('searching for peaks (downturnfinder) on {} number of files'.format(numFiles))
 
     peakIndicies = []
 
@@ -110,16 +112,23 @@ def downturnFinder(files, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops
 
     return peakIndicies
 
-def initialParameters4thresholding(fileSubset, lowerThreshold, initialRefracPeriod):
+def initialParameters4thresholding(fileSubset, lowerThreshold, initialRefracPeriod, initializationOutputDir):
 
-    if DEBUG: print('calculating binaryImageAreas\n')
+    if DEBUG: print('calculating binaryImageAreas for {} file paths\n'.format(len(fileSubset)))
     binaryImageAreas4thresholding = getBinaryAreas(fileSubset, lowerThreshold)
 
-    if DEBUG: print('calculating peaksOnBinaryImage\n')
+    plotOutpath = initializationOutputDir / 'areaVerificationPlot.jpg'
+    saveAreasPlot(binaryImageAreas4thresholding, [], plotOutpath, [])
+
+    if DEBUG: print('calculating peaksOnBinaryImage for {} image areas and {} file paths\n'.format(len(binaryImageAreas4thresholding), len(fileSubset)))
     peaksOnBinaryImage4thresholding = downturnFinder(fileSubset, initialRefracPeriod, lowerThreshold, 10, 15, 25)
+
+
+    print('peaksOnBinaryImage4thresholding: {}'.format(peaksOnBinaryImage4thresholding))
+
     if peaksOnBinaryImage4thresholding[0] < initialRefracPeriod: peaksOnBinaryImage4thresholding.pop(0)
 
-    if DEBUG: print('calculating differences\n')
+    if DEBUG: print('calculating differences on peaks up to {}\n'.format(peaksOnBinaryImage4thresholding[-1]))
     troughsOnBinaryImage4thresholding = dm.getTroughs(binaryImageAreas4thresholding)
     peak2TroughDiff4thresholding = dm.likelyPostPeakTroughDiff(troughsOnBinaryImage4thresholding,
                                                                peaksOnBinaryImage4thresholding)
@@ -399,8 +408,11 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     global MAC
     MAC = macintosh
 
+
     preInitializationDf = pd.read_csv(str(pathOfPreInitializationDF))
     initializationStack = dm.getFrameFilePaths(pathOfInitializationStack)
+
+    print(len(initializationStack))
 
     # static variables across single recording that must be read in from df
     recordingName = preInitializationDf.iloc[0]['RecordingName']
@@ -499,7 +511,8 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     peaksOnBinaryImage, peak2TroughDiff, peak2InflectionDiff = initialParameters4thresholding(initializationStack,
                                                                                              lowerThreshold,
-                                                                                             postPeakRefractoryPeriod)
+                                                                                             postPeakRefractoryPeriod,
+                                                                                             initializationOutputDir)
 
     print('{}:\n {}, {}'.format(peaksOnBinaryImage, peak2TroughDiff, peak2InflectionDiff))
 

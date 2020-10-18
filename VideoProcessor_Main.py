@@ -5,7 +5,7 @@ from pathlib import Path
 import concurrent.futures
 import sys
 
-postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Home/Initialization_DF/PinkTrainingData_Home_PostInitializationDF.csv')
+postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Home/NinaSimone/Initialization_DF/NinaSimone_PostInitializationDF.csv')
 
 # params_df = dm.readCSV2pandasDF(postInit_DF_path)
 #
@@ -32,4 +32,4 @@ if __name__ == "__main__":
     vpm.runFullVideoAnalysis(arg, postInit_DF_path)
 
 
-# parallel python scratch_15.py ::: $(seq 15)
+# parallel python VideoProcessor_Main.py ::: $(seq 16)
