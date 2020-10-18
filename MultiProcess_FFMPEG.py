@@ -53,9 +53,8 @@ image_stack_dir = sorted(stackDir for i in range(len(chunk_paths)))
 
 ############################################################################
 # create a directory for each chunk in image stacks
-if __name__ == '__main__':
-    with mp.Pool(24) as p:
-        p.starmap(makeOutDir, zip(image_stack_dir, chunk_names))
+for chunk in chunk_names:
+    makeOutDir(stackDir, chunk)
 
 print('directories made')
 
