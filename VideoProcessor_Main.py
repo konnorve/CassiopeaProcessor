@@ -29,7 +29,7 @@ postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Beh
 
 if __name__ == "__main__":
     arg = int(sys.argv[1])
-    vpm.runFullVideoAnalysis(arg, postInit_DF_path)
+    vpm.runFullVideoAnalysis(arg-1, postInit_DF_path)
 
 
 # parallel python VideoProcessor_Main.py ::: $(seq 16)
