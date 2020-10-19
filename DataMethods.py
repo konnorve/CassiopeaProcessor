@@ -22,7 +22,6 @@ import pandas as pd
 
 import ImageMethods as im
 
-
 def makeOutDir(outputDir, folderName, DEBUG=False):
     outdir = outputDir / folderName
     if not (outdir.exists()):
@@ -56,6 +55,14 @@ def getFrameFilePaths(videoImageDir):
     imgPaths = [imgPath for imgPath in sorted(videoImageDir.iterdir()) if imgPath.suffix == '.jpg']
 
     return imgPaths
+
+def getSubDirectoryFilePaths(imageStackDir):
+    stackPaths = [stackDir for stackDir in sorted(imageStackDir.iterdir()) if stackDir.name != '.DS_Store']
+
+    return stackPaths
+
+def getFrameCountFromDir(videoImageDir):
+    return sum(1 for entry in os.listdir(videoImageDir) if os.path.isfile(os.path.join(videoImageDir,entry)))
 
 def readCSV2pandasDF(CSVpath):
     return pd.read_csv(str(CSVpath), index_col=0)

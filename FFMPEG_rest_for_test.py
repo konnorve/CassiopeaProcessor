@@ -5,17 +5,21 @@ import pandas as pd
 import shutil
 import DataMethods as dm
 
+import concurrent.futures
+
 ############################################################################################
 
 # in the case of Savio, parent directory would be scratch/jellyname/recording name
-parent_Dir = Path('/global/scratch/users/lilianzhang/Pink/20200707_Pink_218pm_cam2_1')
+parent_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Scratch/NinaSimone/')
+
 # parent_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Scratch')
 
 # directory for video chunks within recording
 videoDir = parent_Dir / 'Video_Chunks'
+stackDir = parent_Dir / 'Image_Stacks'
 
 # home directory path for the recording
-home_Dir = Path('/global/home/users/lilianzhang/Pink/20200707_Pink_218pm_cam2_1')
+home_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Home/NinaSimone')
 # home_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Home')
 
 # Frame rate of recording
@@ -28,28 +32,33 @@ def makeOutDir(outputDir, folderName):
         outdir.mkdir()
     return outdir
 
-
-stackDir = makeOutDir(parent_Dir, '{}_stacks'.format(parent_Dir.name))  # names it after recording_name_stacks
 init_stackDir = makeOutDir(home_Dir, 'Initialization_Stack')
-# sorts by alphabetical (should be correct in choosing first)
-img_stack_dirs = sorted(stackDir / direc for direc in os.listdir(stackDir) if direc != '.DS_Store')
-# create a list with all chunk videos in Video Directory as path objects
-chunk_paths = sorted(videoDir / str(chunk) for chunk in os.listdir(videoDir) if chunk != '.DS_Store')
-chunk_names = sorted(chunk.stem for chunk in chunk_paths)     # take stem of chunk_paths for video_names
-image_stack_dir = sorted(stackDir for i in range(len(chunk_paths)))
 
-print('directories made')
+img_stack_dirs = dm.getSubDirectoryFilePaths(stackDir)
 
 ############################# DF Creation ######################################
-num_frames_per_chunk = []
-for chunk in img_stack_dirs:
-    num_frames_per_chunk.append(len(dm.getFrameFilePaths(chunk)))
-print('number frames in each chunk list is')
-print(num_frames_per_chunk)
+
+initData = []
+
+def getStackInfo(stackPath):
+    name = stackPath.name
+    frame_count = dm.getFrameCountFromDir(stackPath)
+    stackData = [parent_Dir.stem, home_Dir, name, stackPath, frame_count]
+    print(stackData)
+    initData.append(stackData)
+
+if __name__ == '__main__':
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.map(getStackInfo, img_stack_dirs)
 
 # num_frames_per_chunk = [chunk.iterdir() for chunk in chunk_paths]
-pre_init_DF = pd.DataFrame({'RecordingName': parent_Dir.stem, 'RecordingDirPath': home_Dir, 'ChunkName': chunk_names,
-                            'SavioChunkPath': img_stack_dirs, 'NumFramesInChunk': num_frames_per_chunk})
+pre_init_DF = pd.DataFrame(initData, header=[
+                                            'RecordingName',
+                                            'RecordingDirPath',
+                                            'ChunkName',
+                                            'SavioChunkPath',
+                                            'NumFramesInChunk'
+                                            ])
 
 pre_init_DF['FrameRate'] = framerate
 

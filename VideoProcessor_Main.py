@@ -4,8 +4,9 @@ import DataMethods as dm
 from pathlib import Path
 import concurrent.futures
 import sys
+import os
 
-postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Home/NinaSimone/Initialization_DF/NinaSimone_PostInitializationDF.csv')
+postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Home/TaylorS/Initialization_DF/TaylorS_PostInitializationDF.csv')
 
 # params_df = dm.readCSV2pandasDF(postInit_DF_path)
 #
@@ -29,7 +30,8 @@ postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Beh
 
 if __name__ == "__main__":
     arg = int(sys.argv[1])
+    os.system('sleep {}'.format(arg))
     vpm.runFullVideoAnalysis(arg-1, postInit_DF_path)
 
 
-# parallel python VideoProcessor_Main.py ::: $(seq 16)
+# parallel python VideoProcessor_Main.py ::: $(seq 18)

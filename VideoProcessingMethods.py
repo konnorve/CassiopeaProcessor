@@ -122,6 +122,9 @@ def initialize_params(files, startingFrameNum):
     global segmentVerificationDir
     global movementSegment
 
+    # TODO: save out starting frame number of each movement segment!!!! Easiser to track how far something is in analysis
+    # TODO: save orientation frame with leading zeros up to 1000 (001,002,003..)
+
     reinitializeElapsedTime()
     saveSegmentVariableParams()
 
