@@ -6,7 +6,7 @@ import concurrent.futures
 import sys
 import os
 
-postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Home/TaylorS/Initialization_DF/TaylorS_PostInitializationDF.csv')
+postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/Short_Behavioral_Recordings/Home/NinaSimone/Initialization_DF/NinaSimone_PostInitializationDF_After.csv')
 
 # params_df = dm.readCSV2pandasDF(postInit_DF_path)
 #
