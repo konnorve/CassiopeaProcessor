@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 import shutil
 import DataMethods as dm
+import multiprocessing as mp
 
 import concurrent.futures
 
@@ -43,24 +44,22 @@ initData = []
 def getStackInfo(stackPath):
     name = stackPath.name
     frame_count = dm.getFrameCountFromDir(stackPath)
-    stackData = [parent_Dir.stem, home_Dir, name, stackPath, frame_count]
+    stackData = [parent_Dir.stem, home_Dir, name, stackPath, frame_count, framerate]
     print(stackData)
-    initData.append(stackData)
+    return stackData
 
 if __name__ == '__main__':
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        executor.map(getStackInfo, img_stack_dirs)
+    with mp.Pool(24) as p:
+        initData = p.starmap(getStackInfo, zip(img_stack_dirs))
 
 # num_frames_per_chunk = [chunk.iterdir() for chunk in chunk_paths]
-pre_init_DF = pd.DataFrame(initData, header=[
-                                            'RecordingName',
+pre_init_DF = pd.DataFrame(initData, columns=['RecordingName',
                                             'RecordingDirPath',
                                             'ChunkName',
                                             'SavioChunkPath',
-                                            'NumFramesInChunk'
+                                            'NumFramesInChunk',
+                                            'FrameRate'
                                             ])
-
-pre_init_DF['FrameRate'] = framerate
 
 #check
 print('pre init DF is')
@@ -81,7 +80,7 @@ print('image paths for 30s stack')
 print(imgs_for_init[:10])
 
 for img in imgs_for_init:
-    print(shutil.copy(str(img), str(init_stackDir)))
+    shutil.copy(str(img), str(init_stackDir))
 
 # check how far it got
 print('image stack complete')
