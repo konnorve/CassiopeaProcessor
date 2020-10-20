@@ -33,6 +33,13 @@ def makeOutDir(outputDir, folderName):
         outdir.mkdir()
     return outdir
 
+def getStackInfo(stackPath):
+    name = stackPath.name
+    frame_count = dm.getFrameCountFromDir_grep(stackPath)
+    stackData = [parent_Dir.stem, home_Dir, name, stackPath, frame_count, framerate]
+    print(stackData)
+    return stackData
+
 init_stackDir = makeOutDir(home_Dir, 'Initialization_Stack')
 
 img_stack_dirs = dm.getSubDirectoryFilePaths(stackDir)
@@ -41,16 +48,8 @@ img_stack_dirs = dm.getSubDirectoryFilePaths(stackDir)
 
 initData = []
 
-def getStackInfo(stackPath):
-    name = stackPath.name
-    frame_count = dm.getFrameCountFromDir(stackPath)
-    stackData = [parent_Dir.stem, home_Dir, name, stackPath, frame_count, framerate]
-    print(stackData)
-    return stackData
-
-if __name__ == '__main__':
-    with mp.Pool(24) as p:
-        initData = p.starmap(getStackInfo, zip(img_stack_dirs))
+for stack in img_stack_dirs:
+    initData.append(getStackInfo(stack))
 
 # num_frames_per_chunk = [chunk.iterdir() for chunk in chunk_paths]
 pre_init_DF = pd.DataFrame(initData, columns=['RecordingName',
