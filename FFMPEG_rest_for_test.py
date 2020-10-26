@@ -4,18 +4,27 @@ from pathlib import Path
 import pandas as pd
 import shutil
 import DataMethods as dm
+import multiprocessing as mp
+import os
+import sys
+
+import concurrent.futures
 
 ############################################################################################
 
 # in the case of Savio, parent directory would be scratch/jellyname/recording name
-parent_Dir = Path('/global/scratch/users/lilianzhang/Pink/20200707_Pink_218pm_cam2_1')
+parent_Dir = Path(sys.arv[1])
+# parent_Dir = Path('/global/scratch/kve/Lgaga/20200723_Lgaga_730pm_cam2_1')
+
 # parent_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Scratch')
 
 # directory for video chunks within recording
 videoDir = parent_Dir / 'Video_Chunks'
+stackDir = parent_Dir / 'Image_Stacks'
 
 # home directory path for the recording
-home_Dir = Path('/global/home/users/lilianzhang/Pink/20200707_Pink_218pm_cam2_1')
+home_Dir = Path(sys.arv[2])
+# home_Dir = Path('/global/home/groups/fc_xenopus/Lgaga_kve/20200723_Lgaga_730pm_cam2_1')
 # home_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Home')
 
 # Frame rate of recording
@@ -28,30 +37,32 @@ def makeOutDir(outputDir, folderName):
         outdir.mkdir()
     return outdir
 
+def getStackInfo(stackPath):
+    name = stackPath.name
+    frame_count = dm.getFrameCountFromDir_grep(stackPath)
+    stackData = [parent_Dir.stem, home_Dir, name, stackPath, frame_count, framerate]
+    print(stackData)
+    return stackData
 
-stackDir = makeOutDir(parent_Dir, '{}_stacks'.format(parent_Dir.name))  # names it after recording_name_stacks
 init_stackDir = makeOutDir(home_Dir, 'Initialization_Stack')
-# sorts by alphabetical (should be correct in choosing first)
-img_stack_dirs = sorted(stackDir / direc for direc in os.listdir(stackDir) if direc != '.DS_Store')
-# create a list with all chunk videos in Video Directory as path objects
-chunk_paths = sorted(videoDir / str(chunk) for chunk in os.listdir(videoDir) if chunk != '.DS_Store')
-chunk_names = sorted(chunk.stem for chunk in chunk_paths)     # take stem of chunk_paths for video_names
-image_stack_dir = sorted(stackDir for i in range(len(chunk_paths)))
 
-print('directories made')
+img_stack_dirs = dm.getSubDirectoryFilePaths(stackDir)
 
 ############################# DF Creation ######################################
-num_frames_per_chunk = []
-for chunk in img_stack_dirs:
-    num_frames_per_chunk.append(len(dm.getFrameFilePaths(chunk)))
-print('number frames in each chunk list is')
-print(num_frames_per_chunk)
+
+initData = []
+
+for stack in img_stack_dirs:
+    initData.append(getStackInfo(stack))
 
 # num_frames_per_chunk = [chunk.iterdir() for chunk in chunk_paths]
-pre_init_DF = pd.DataFrame({'RecordingName': parent_Dir.stem, 'RecordingDirPath': home_Dir, 'ChunkName': chunk_names,
-                            'SavioChunkPath': img_stack_dirs, 'NumFramesInChunk': num_frames_per_chunk})
-
-pre_init_DF['FrameRate'] = framerate
+pre_init_DF = pd.DataFrame(initData, columns=['RecordingName',
+                                            'RecordingDirPath',
+                                            'ChunkName',
+                                            'SavioChunkPath',
+                                            'NumFramesInChunk',
+                                            'FrameRate'
+                                            ])
 
 #check
 print('pre init DF is')
@@ -72,7 +83,7 @@ print('image paths for 30s stack')
 print(imgs_for_init[:10])
 
 for img in imgs_for_init:
-    print(shutil.copy(str(img), str(init_stackDir)))
+    shutil.copy(str(img), str(init_stackDir))
 
 # check how far it got
 print('image stack complete')
