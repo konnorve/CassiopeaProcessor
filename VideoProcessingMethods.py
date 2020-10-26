@@ -455,6 +455,8 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     params_df = dm.readCSV2pandasDF(postInitiationDFPath)
     params_chunkRow = params_df.iloc[chunkRow]
 
+    print(params_chunkRow)
+
     # creates global references to mutate below if different input parameters are specified
     # variable that are constant for entire recording
     global recordingName  # the name of the recording being processed

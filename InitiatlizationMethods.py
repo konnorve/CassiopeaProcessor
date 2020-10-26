@@ -430,7 +430,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     inflectionTestDiff = None
     inflectionTestBinaryThreshold = None
     chosenSD = None   # not saved in final DF
-    numConsecutiveDrops = 5
+    numConsecutiveDrops = 7
 
     # static variables across all recordings
     movementThreshold4reinitialization = 50
