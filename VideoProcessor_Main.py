@@ -4,8 +4,10 @@ import DataMethods as dm
 from pathlib import Path
 import concurrent.futures
 import sys
+from time import sleep
 
-postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Home/Initialization_DF/PinkTrainingData_Home_PostInitializationDF.csv')
+postInit_DF_path = Path(sys.arv[1])
+# postInit_DF_path = Path('/global/home/groups/fc_xenopus/Lgaga_kve/20200720_Lgaga_604pm_cam2_1/Initialization_DF/20200720_Lgaga_604pm_cam2_1_PostInitializationDF.csv')
 
 # params_df = dm.readCSV2pandasDF(postInit_DF_path)
 #
@@ -28,8 +30,11 @@ postInit_DF_path = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrain
 #         executor.map(vpm.runFullVideoAnalysis, zip(range(numChunks), [postInit_DF_path]*numChunks))
 
 if __name__ == "__main__":
-    arg = int(sys.argv[1])
+    arg = int(sys.argv[2])
+    print(arg)
+    sleep(arg)
+    print(postInit_DF_path)
     vpm.runFullVideoAnalysis(arg, postInit_DF_path)
 
 
-# parallel python scratch_15.py ::: $(seq 15)
+# parallel python scratch_15.py ::: $(seq 100)
