@@ -22,6 +22,9 @@ import pandas as pd
 
 import ImageMethods as im
 
+import subprocess as sp
+
+import re
 
 def makeOutDir(outputDir, folderName, DEBUG=False):
     outdir = outputDir / folderName
@@ -56,6 +59,20 @@ def getFrameFilePaths(videoImageDir):
     imgPaths = [imgPath for imgPath in sorted(videoImageDir.iterdir()) if imgPath.suffix == '.jpg']
 
     return imgPaths
+
+def getSubDirectoryFilePaths(imageStackDir):
+    stackPaths = [stackDir for stackDir in sorted(imageStackDir.iterdir()) if stackDir.name != '.DS_Store']
+
+    return stackPaths
+
+def getFrameCountFromDir(videoImageDir):
+    return sum(1 for entry in os.listdir(videoImageDir) if os.path.isfile(os.path.join(videoImageDir,entry)))
+
+def getFrameCountFromDir_grep(videoImageDir):
+    output = sp.check_output('ls -1 {} | wc -l'.format(videoImageDir), shell=True)
+    stringOutput = output.decode("utf-8")
+    numStacks = int(re.findall(r'\d+', stringOutput)[0])
+    return numStacks
 
 def readCSV2pandasDF(CSVpath):
     return pd.read_csv(str(CSVpath), index_col=0)
@@ -214,26 +231,6 @@ def getTroughs(areas, frameNums=None):
             troughFrameNums.append(frameNums[i])
 
     return troughFrameNums
-
-
-def getPeaksAndTroughs(areas, frameNums):
-    """
-    Gets all peak and trough frame nums
-    :param areas: list of jelly region areas (can try thresholded True areas at some point)
-    :param frameNums: list of corresponding frame nums to the areas.
-    :return: list of peak frame nums and list of trough frame nums
-    """
-    peakFrameNums = []
-    troughFrameNums = []
-
-    for i in range(2, len(areas) - 2):
-        if is_peak(i, areas):
-            peakFrameNums.append(frameNums[i])
-
-        if is_trough(i, areas):
-            troughFrameNums.append(frameNums[i])
-
-    return peakFrameNums, troughFrameNums
 
 
 def finitediffSecondOrder(index, nums):
