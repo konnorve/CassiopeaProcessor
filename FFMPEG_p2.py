@@ -14,9 +14,6 @@ import concurrent.futures
 
 # in the case of Savio, parent directory would be scratch/jellyname/recording name
 parent_Dir = Path(sys.arv[1])
-# parent_Dir = Path('/global/scratch/kve/Lgaga/20200723_Lgaga_730pm_cam2_1')
-
-# parent_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Scratch')
 
 # directory for video chunks within recording
 videoDir = parent_Dir / 'Video_Chunks'
@@ -24,8 +21,6 @@ stackDir = parent_Dir / 'Image_Stacks'
 
 # home directory path for the recording
 home_Dir = Path(sys.arv[2])
-# home_Dir = Path('/global/home/groups/fc_xenopus/Lgaga_kve/20200723_Lgaga_730pm_cam2_1')
-# home_Dir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_10/PinkTrainingData_Home')
 
 # Frame rate of recording
 framerate = 120
