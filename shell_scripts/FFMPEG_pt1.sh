@@ -31,6 +31,8 @@ VIDEOSCRATCHPATH=/global/scratch/kve/Lgaga/20200723_Lgaga_730pm_cam2_1
 VIDEOCHUNKPATH=$VIDEOSCRATCHPATH/Video_Chunks
 IMAGESTACKPATH=$VIDEOSCRATCHPATH/Image_Stacks
 
+$FRAMERATE=120
+
 mkdir $IMAGESTACKPATH
 ls $VIDEOCHUNKPATH/*.mp4 | parallel mkdir $IMAGESTACKPATH/{/.}
-ls $VIDEOCHUNKPATH/*.mp4 | parallel ffmpeg -i {} -r 120 -q 0 $IMAGESTACKPATH/{/.}/%14d.jpg
+ls $VIDEOCHUNKPATH/*.mp4 | parallel ffmpeg -i {} -r $FRAMERATE -q 0 $IMAGESTACKPATH/{/.}/%14d.jpg
