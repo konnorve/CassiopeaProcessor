@@ -24,11 +24,11 @@
 ## Command(s) to run:
 module load python/3.6
 source activate kve_runFFMPEG
-python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/FFMPEG_rest_for_test.py
+python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/FFMPEG_p2.py
 
 VIDEOSCRATCHPATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
 HOMEDIRPATH = /global/home/kve/Janis/20200726_Janis_606pm_cam1_1
 
-parallel python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/FFMPEG_job_pt2.py:::$POSTINIT_DF_PATH:::$HOMEDIRPATH
+parallel python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/FFMPEG_job_pt2.py:::$VIDEOSCRATCHPATH:::$HOMEDIRPATH
 
 
