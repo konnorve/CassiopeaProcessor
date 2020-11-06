@@ -263,6 +263,12 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
     otherData = np.empty((len(peaksOnBinaryImage), len(otherDataCols)))
     otherData[:] = np.nan
 
+    # read in by eye angle measurements
+    byEyeAngleDF = pd.DataFrame(peaksOnBinaryImage, columns=['peaks'])
+    byEyeAngleDF['by eye measurement (0 to 360)'] = np.nan
+    byEyeAngleDFioPath = initializationOutputDir / '{}_byEyeAngles.csv'.format(recordingName)
+    byEyeAngleDF.to_csv(str(byEyeAngleDFioPath), index=False)
+
     for i, peak in enumerate(peaksOnBinaryImage):
         troughInfile = fileSubset[peak + peak2TroughDiff]
         relaxedInfile = fileSubset[peak + peak2InflectionDiff]
@@ -274,7 +280,7 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
         centroidRegion = im.findJellyRegion(binaryCentroidDiff)
         centroid = im.findCentroid_boundingBox(centroidRegion)
 
-        centroidVerOutFile = centroidDir / 'centroid for {} - {}.png'.format(recordingName, peak + peak2InflectionDiff)
+        centroidVerOutFile = centroidDir / 'centroid for {} - {:03}.png'.format(recordingName, peak + peak2InflectionDiff)
         im.saveJellyPlot(im.getCentroidVerificationImg(centroidDiff, binaryCentroidDiff, centroid), centroidVerOutFile)
 
         peakInfile = fileSubset[peak]
@@ -283,7 +289,7 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
         binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05)
         averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
 
-        dynamicRangeImgOutfile = dynamicRangeDir / 'dynamicRangeImg_{}.png'.format(peak + peak2InflectionDiff)
+        dynamicRangeImgOutfile = dynamicRangeDir / 'dynamicRangeImg_{:03}.png'.format(peak + peak2InflectionDiff)
 
         im.saveJellyPlot(averagedDynamicRangeMaskedImg, dynamicRangeImgOutfile)
 
@@ -296,7 +302,7 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
             normalizedTestDiff = testDiff / averagedDynamicRangeMaskedImg
             testDiffImages.append(normalizedTestDiff)
 
-        testingOutfile = angleArrImageDir / 'testPlot for {} - {}.png'.format(recordingName, peak + peak2InflectionDiff)
+        testingOutfile = angleArrImageDir / 'testPlot for {} - {:03}.png'.format(recordingName, peak + peak2InflectionDiff)
         pulseAngleData = im.saveDifferenceTestingAggregationImage(relaxedImg, testDiffImages, thresholdCases,
                                                                   testingOutfile, False, centroid)
 
@@ -322,65 +328,64 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
     dfOut.to_csv(str(verificationCSVOutFile), header=False, index=False)
 
     # setting test difference and threshold
+    def runSDanalysis():
+        if CHIME: dm.chime(MAC, 'input time')
 
-    # read in by eye angle measurements
-    byEyeAngleDF = pd.DataFrame(peaksOnBinaryImage, columns=['peaks'])
-    byEyeAngleDF['by eye measurement (0 to 360)'] = np.nan
-    byEyeAngleDFioPath = initializationOutputDir / '{}_byEyeAngles.csv'.format(recordingName)
-    byEyeAngleDF.to_csv(str(byEyeAngleDFioPath))
+        print('time to enter by eye angles for each pulse')
+        print('entries must be from 0 to 360')
+        print('Enter \'1\' to continue.')
+        dm.getSelection([1])
 
-    if CHIME: dm.chime(MAC, 'input time')
+        byEyeAngleDF = pd.read_csv(str(byEyeAngleDFioPath))
 
-    print('time to enter by eye angles for each pulse')
-    print('entries must be from 0 to 360')
-    print('Enter \'1\' to continue.')
-    dm.getSelection([1])
+        byEyeAngles = byEyeAngleDF['by eye measurement (0 to 360)'].tolist()
 
-    byEyeAngleDF = pd.read_csv(str(byEyeAngleDFioPath))
+        i = 0
+        while i < len(byEyeAngles):
+            if byEyeAngles[i] == np.nan:
+                np.delete(angleData, i, 0)
+                byEyeAngles.pop(i)
+            else:
+                i += 1
 
-    byEyeAngles = byEyeAngleDF['by eye measurement (0 to 360)'].tolist()
+        angleDataShape = angleData.shape
 
-    i = 0
-    while i < len(byEyeAngles):
-        if byEyeAngles[i] == np.nan:
-            np.delete(angleData, i, 0)
-            byEyeAngles.pop(i)
-        else:
-            i += 1
+        diff2byeye = np.empty((angleDataShape[2], angleDataShape[1], angleDataShape[0]))
+        diff2byeye[:] = np.nan
+        for i in range(angleDataShape[0]):
+            for j in range(angleDataShape[1]):
+                for k in range(angleDataShape[2]):
+                    diff2byeye[k][j][i] = dm.angleDifferenceCalc(angleData[i][j][k], byEyeAngles[i])
 
-    angleDataShape = angleData.shape
+        squaredDiffs = np.square(diff2byeye)
+        summedDiffs = np.sum(squaredDiffs, axis=2)
+        varianceTable = summedDiffs / diff2byeye.shape[2]
+        sdTable = np.sqrt(varianceTable)
 
-    diff2byeye = np.empty((angleDataShape[2], angleDataShape[1], angleDataShape[0]))
-    diff2byeye[:] = np.nan
-    for i in range(angleDataShape[0]):
-        for j in range(angleDataShape[1]):
-            for k in range(angleDataShape[2]):
-                diff2byeye[k][j][i] = dm.angleDifferenceCalc(angleData[i][j][k], byEyeAngles[i])
+        sdTableMinIndex = list(
+            [np.where(sdTable == np.nanmin(sdTable))[0][0], np.where(sdTable == np.nanmin(sdTable))[1][0]])
 
-    squaredDiffs = np.square(diff2byeye)
-    summedDiffs = np.sum(squaredDiffs, axis=2)
-    varianceTable = summedDiffs / diff2byeye.shape[2]
-    sdTable = np.sqrt(varianceTable)
+        lowSDthresholds = []
+        lowSDtestFrames = []
 
-    sdTableMinIndex = list(
-        [np.where(sdTable == np.nanmin(sdTable))[0][0], np.where(sdTable == np.nanmin(sdTable))[1][0]])
+        for x in np.sort(sdTable.ravel())[0:5]:
+            loc = np.where(sdTable == x)
+            lowSDthresholds.append(loc[0][0])
+            lowSDtestFrames.append(loc[1][0])
 
-    lowSDthresholds = []
-    lowSDtestFrames = []
+        inflectionTestBinaryThreshold = thresholdCases[int(np.median(lowSDthresholds))]
+        inflectionTestDiff = postInflectionDiffCases[int(np.median(lowSDtestFrames))]
 
-    for x in np.sort(sdTable.ravel())[0:5]:
-        loc = np.where(sdTable == x)
-        lowSDthresholds.append(loc[0][0])
-        lowSDtestFrames.append(loc[1][0])
+        return inflectionTestBinaryThreshold, inflectionTestDiff, sdTable, sdTableMinIndex
 
-    inflectionTestBinaryThreshold = thresholdCases[int(np.median(lowSDthresholds))]
-    inflectionTestDiff = postInflectionDiffCases[int(np.median(lowSDtestFrames))]
+    inflectionTestBinaryThreshold, inflectionTestDiff, sdTable, sdTableMinIndex = runSDanalysis()
 
     if CHIME: dm.chime(MAC, 'input time')
     while True:
         print('thresholding options: {}'.format(thresholdCases))
         print('test frame options: {}'.format(postInflectionDiffCases))
-        print(sdTable)
+        np.set_printoptions(threshold=np.inf)
+        print(np.asarray(sdTable))
         print('index of min sd: {}'.format(sdTableMinIndex))
         print('selected sd: {}'.format(sdTable[thresholdCases.index(inflectionTestBinaryThreshold)][
                                            postInflectionDiffCases.index(inflectionTestDiff)]))
@@ -389,13 +394,16 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
         print('select \'1\' to change {} which is {}'.format('inflectionTestBinaryThreshold',
                                                              inflectionTestBinaryThreshold))
         print('select \'2\' to change {} which is {}'.format('inflectionTestDiff', inflectionTestDiff))
-        print('or \'3\' to continue.')
+        print('select \'3\' to update by eye measurements')
+        print('or \'4\' to continue.')
 
-        selectionVar = dm.getSelection([1, 2, 3])
+        selectionVar = dm.getSelection([1, 2, 3, 4])
         if selectionVar == '1':
             inflectionTestBinaryThreshold = float(dm.getSelection(thresholdCases))
         elif selectionVar == '2':
             inflectionTestDiff = int(dm.getSelection(postInflectionDiffCases))
+        elif selectionVar == '3':
+            inflectionTestBinaryThreshold, inflectionTestDiff, sdTable, sdTableMinIndex = runSDanalysis()
         else:
             break
 
