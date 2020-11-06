@@ -7,20 +7,19 @@ import DataMethods as dm
 import multiprocessing as mp
 import os
 import sys
-
 import concurrent.futures
 
 ############################################################################################
 
 # in the case of Savio, parent directory would be scratch/jellyname/recording name
-parent_Dir = Path(sys.arv[1])
+parent_Dir = Path(sys.argv[1])
 
 # directory for video chunks within recording
 videoDir = parent_Dir / 'Video_Chunks'
 stackDir = parent_Dir / 'Image_Stacks'
 
 # home directory path for the recording
-home_Dir = Path(sys.arv[2])
+home_Dir = Path(sys.argv[2])
 
 # Frame rate of recording
 framerate = 120

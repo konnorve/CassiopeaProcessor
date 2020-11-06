@@ -6,7 +6,7 @@ import concurrent.futures
 import sys
 from time import sleep
 
-postInit_DF_path = Path(sys.arv[1])
+postInit_DF_path = Path(sys.argv[1])
 
 if __name__ == "__main__":
     arg = int(sys.argv[2])

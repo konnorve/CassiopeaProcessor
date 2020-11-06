@@ -23,12 +23,12 @@
 #
 ## Command(s) to run:
 module load python/3.6
+module load gnu-parallel/2019.03.22
 source activate CassiopeaProcessor
-python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/FFMPEG_p2.py
 
 VIDEOSCRATCHPATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
-HOMEDIRPATH = /global/home/kve/Janis/20200726_Janis_606pm_cam1_1
+HOMEDIRPATH=/global/home/kve/Janis/20200726_Janis_606pm_cam1_1
 
-parallel python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/FFMPEG_p2.py ::: $VIDEOSCRATCHPATH ::: $HOMEDIRPATH
+parallel python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/FFMPEG_p2.py ::: $VIDEOSCRATCHPATH ::: $HOMEDIRPATH
 
 
