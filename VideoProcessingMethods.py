@@ -65,6 +65,9 @@ def saveSegmentVariableParams():
 
         [startTimeOfAnalysis, 'start time of data analysis on Savio'],
         [elapsedTime, 'elapsed time since start of chunk analysis to when that movement segment is completed'],
+        [currentSegmentStartingFrame, 'variable that tracks the starting frame number for each movement segment'],
+        [currentSegmentEndingFrame, 'variable that tracks the ending frame number for each movement segment'],
+        [isChunkAnalysisFinished, 'variable that tells you if the chunk analysis is fully finished'],
     ]),
 
         index=[
@@ -103,7 +106,11 @@ def saveSegmentVariableParams():
             'segmentVerificationDir',
 
             'startTimeOfAnalysis',
-            'elapsedTime'],
+            'elapsedTime',
+            'currentSegmentStartingFrame',
+            'currentSegmentEndingFrame',
+            'isChunkAnalysisFinished',
+            ],
 
         columns=['data', 'notes'])
 
@@ -121,9 +128,12 @@ def initialize_params(files, startingFrameNum):
     global pathOfCurrentParamDF
     global segmentVerificationDir
     global movementSegment
+    global currentSegmentStartingFrame
+    global currentSegmentEndingFrame
+    global isChunkAnalysisFinished
 
-    # TODO: save out starting frame number of each movement segment!!!! Easiser to track how far something is in analysis
-    # TODO: save orientation frame with leading zeros up to 1000 (001,002,003..)
+    currentSegmentStartingFrame = startingFrameNum
+    currentSegmentEndingFrame = startingFrameNum
 
     reinitializeElapsedTime()
     saveSegmentVariableParams()
@@ -191,21 +201,21 @@ def initialize_params(files, startingFrameNum):
         centroidRegion = im.findJellyRegion(binaryCentroidDiff)
         centroid = im.findCentroid_boundingBox(centroidRegion)
 
-        centroidVerOutFile = centroidDir / 'centroid for {} - {}.png'.format(segmentName, peak + peak2InflectionDiff)
+        centroidVerOutFile = centroidDir / 'centroid for {}_{:03}.png'.format(segmentName, peak + peak2InflectionDiff)
         im.saveJellyPlot(im.getCentroidVerificationImg(centroidDiff, binaryCentroidDiff, centroid), centroidVerOutFile)
 
         if i == 0:
-            orientationOutFile = orientationDir / '{}_{}.png'.format(chunkName, movementSegment)
+            orientationOutFile = orientationDir / '{}_{:03}.png'.format(chunkName, movementSegment)
             im.saveJellyPlot(relaxedImg, orientationOutFile, [centroid, (centroid[0], 15)])
 
-        orientationOutFile = segmentOrientationDir / 'relaxedFrame_{}.png'.format(peak + peak2InflectionDiff)
+        orientationOutFile = segmentOrientationDir / 'relaxedFrame_{:03}.png'.format(peak + peak2InflectionDiff)
         im.saveJellyPlot(relaxedImg, orientationOutFile, [centroid, (centroid[0], 15)])
 
         peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
         binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05, upper_bound=1)
         averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
 
-        dynamicRangeImgOutfile = dynamicRangeDir / 'dynamicRangeImg_{}.png'.format(peak + peak2InflectionDiff)
+        dynamicRangeImgOutfile = dynamicRangeDir / 'dynamicRangeImg_{:03}.png'.format(peak + peak2InflectionDiff)
         im.saveJellyPlot(averagedDynamicRangeMaskedImg, dynamicRangeImgOutfile)
 
         testDiff = im.getGrayscaleImageDiff_absolute(testImg, relaxedImg)
@@ -219,7 +229,7 @@ def initialize_params(files, startingFrameNum):
             local_com = im.findCentroid_regionProp(biggestRegion)
             zeroDegreePoint = (centroid[0], 0)
 
-        testingOutfile = plotDir / 'testPlot for {} - {}.png'.format(segmentName, peak + peak2InflectionDiff)
+        testingOutfile = plotDir / 'testPlot for {} - {:03}.png'.format(segmentName, peak + peak2InflectionDiff)
         im.saveJellyPlot(binaryDiffImg, testingOutfile, [centroid, zeroDegreePoint, local_com])
 
     # saves important parameters used in analysis to csv
@@ -233,6 +243,8 @@ def initialize_params(files, startingFrameNum):
 
 
 def differenceAngleFinder(files):
+
+    global currentSegmentEndingFrame
 
     i = 0
 
@@ -338,6 +350,8 @@ def differenceAngleFinder(files):
                             else:
                                 # must mutate data to take out
                                 data = data[:-pulseCountInQuestionablyStationary]
+                                currentSegmentEndingFrame = i
+                                saveSegmentVariableParams()
                                 saveOutData()
                                 data = []
 
@@ -446,6 +460,8 @@ def differenceAngleFinder(files):
         raise
 
     finally:
+        currentSegmentEndingFrame = i
+        saveSegmentVariableParams()
         saveOutData()
 
 
@@ -502,10 +518,16 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     # Savio specific information on running these chunks
     global startTimeOfAnalysis #start time of data analysis on Savio
     global elapsedTime #elapsed time since start of chunk analysis to when that data is completed
+    global currentSegmentStartingFrame # variable that tracks the starting frame number for each movement segment
+    global currentSegmentEndingFrame # variable that tracks the ending frame number for each movement segment
+    global isChunkAnalysisFinished # variable that tells you if the chunk analysis is fully finished
 
     # Initializing Savio specific information on running these chunks
     startTimeOfAnalysis = datetime.datetime.now()
     elapsedTime = None
+    currentSegmentStartingFrame = 0
+    currentSegmentEndingFrame = 0
+    isChunkAnalysisFinished = False
     
     # initializing variables from param df
     # intitalizing variable that are constant for entire recording
@@ -562,6 +584,8 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
 
     # run analysis
     differenceAngleFinder(files)
+
+    isChunkAnalysisFinished = True
 
     reinitializeElapsedTime()
     saveSegmentVariableParams()
