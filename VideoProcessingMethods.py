@@ -288,12 +288,13 @@ def differenceAngleFinder(files):
 
     try:
         while i < framesInChunk:
-            if counter%100 == 0: print('i: '+str(i)+ ', peak: ' + str(peak))
 
             isDownturn = dm.is_downturn(0, testAreas, numConsecutiveDrops)
 
             if isDownturn:
                 peak = i - numConsecutiveDrops
+
+                print("chunk: {}, i: {}, peak: {}".format(chunkName, i, peak))
 
                 # checks that peaks are within testing bounds
                 if peak + peak2InflectionDiff >= 0 and peak + peak2TroughDiff < framesInChunk:
@@ -453,10 +454,11 @@ def differenceAngleFinder(files):
 
     except Exception as error:
         print('{} error occured.'.format(error))
-        print("index: {}, isMoving: {}, isQStat: {}, centroid: {}".format(i,
-                                                                       isMoving,
-                                                                       isQuestionablyStationary,
-                                                                       str(centroid)))
+        print("chunkName: {}, index: {}, isMoving: {}, isQStat: {}, centroid: {}".format(chunkName,
+                                                                                         i,
+                                                                                         isMoving,
+                                                                                         isQuestionablyStationary,
+                                                                                         str(centroid)))
         raise
 
     finally:

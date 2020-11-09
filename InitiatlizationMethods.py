@@ -123,7 +123,6 @@ def initialParameters4thresholding(fileSubset, lowerThreshold, initialRefracPeri
     if DEBUG: print('calculating peaksOnBinaryImage for {} image areas and {} file paths\n'.format(len(binaryImageAreas4thresholding), len(fileSubset)))
     peaksOnBinaryImage4thresholding = downturnFinder(fileSubset, initialRefracPeriod, lowerThreshold, 10, 15, 25)
 
-
     print('peaksOnBinaryImage4thresholding: {}'.format(peaksOnBinaryImage4thresholding))
 
     if peaksOnBinaryImage4thresholding[0] < initialRefracPeriod: peaksOnBinaryImage4thresholding.pop(0)
@@ -431,7 +430,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     # static variables across single recording that must be initialized
     averageTroughBinaryArea = None
-    lowerThreshold = 0.1   # not saved in final DF
+    lowerThreshold = 0.3   # not saved in final DF
     peak2InflectionDiff = None
     peak2TroughDiff = None
     postPeakRefractoryPeriod = 40

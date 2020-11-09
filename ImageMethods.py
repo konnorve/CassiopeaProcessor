@@ -67,7 +67,16 @@ def getJellyImageFromFile(imgfile):
     :param imgfile: path object for frame of interest
     :return: rgb np image array (shape: y, x, 3)
     """
-    return io.imread(str(imgfile))
+    try:
+        return io.imread(str(imgfile))
+    except Exception as error:
+        print('\"{}\" error occured.'.format(error))
+        print('frame that error occured on: {}'.format(imgfile))
+        print('shape of image using PIL: {}'.format(io.imread(str(imgfile)).shape))
+        print('shape of image using Matplotlib: {}'.format(io.imread(str(imgfile), plugin='matplotlib').shape))
+    else:
+        return io.imread(str(imgfile), plugin='matplotlib')
+
 
 def getJellyGrayImageFromFile(imgfile):
     image = getJellyImageFromFile(imgfile)
