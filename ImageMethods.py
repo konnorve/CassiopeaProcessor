@@ -70,12 +70,14 @@ def getJellyImageFromFile(imgfile):
     try:
         return io.imread(str(imgfile))
     except Exception as error:
-        print('\"{}\" error occured.'.format(error))
+        print('\"{}\" error occured. (likely empty file)'.format(error))
         print('frame that error occured on: {}'.format(imgfile))
-        print('shape of image using PIL: {}'.format(io.imread(str(imgfile)).shape))
-        print('shape of image using Matplotlib: {}'.format(io.imread(str(imgfile), plugin='matplotlib').shape))
-    else:
-        return io.imread(str(imgfile), plugin='matplotlib')
+
+        faultFrameNum = dm.getFrameNumFromFile(imgfile)
+        prevFrameNum = faultFrameNum - 1
+        pathOfPrevFrameNum = dm.getFileFromFrameNum(prevFrameNum, imgfile.parent)
+
+        return getJellyImageFromFile(pathOfPrevFrameNum)
 
 
 def getJellyGrayImageFromFile(imgfile):
