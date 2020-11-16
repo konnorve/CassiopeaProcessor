@@ -29,6 +29,10 @@ module load gnu-parallel/2019.03.22
 source activate CassiopeaProcessor
 
 POSTINIT_DF_PATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
+PARENTDIR="$(dirname "$POSTINIT_DF_PATH")"
+TEMPOUTDIR=$PARENTDIR/stdout
 
-parallel python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/VideoProcessor_Main.py ::: $POSTINIT_DF_PATH ::: $(seq 60)
+mkdir $TEMPOUTDIR
+
+parallel --results $TEMPOUTDIR python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/VideoProcessor_Main.py ::: $POSTINIT_DF_PATH ::: $(seq 60)
 

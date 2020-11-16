@@ -30,12 +30,14 @@ source activate kve_runFFMPEG
 VIDEOSCRATCHPATH=/global/scratch/kve/Lgaga/20200723_Lgaga_730pm_cam2_1
 VIDEOCHUNKPATH=$VIDEOSCRATCHPATH/Video_Chunks
 IMAGESTACKPATH=$VIDEOSCRATCHPATH/Image_Stacks
+TEMPOUTDIR=$VIDEOSCRATCHPATH/stdout
 
 FRAMERATE=120
 
+mkdir $TEMPOUTDIR
 mkdir $IMAGESTACKPATH
 ls $VIDEOCHUNKPATH/*.mp4 | parallel mkdir $IMAGESTACKPATH/{/.}
-ls $VIDEOCHUNKPATH/*.mp4 | parallel ffmpeg -i {} -r $FRAMERATE -q 0 $IMAGESTACKPATH/{/.}/%14d.jpg
+ls $VIDEOCHUNKPATH/*.mp4 | parallel --results $TEMPOUTDIR ffmpeg -i {} -r $FRAMERATE -q 0 $IMAGESTACKPATH/{/.}/%14d.jpg
 
 
 #ffmpeg -ss 00:03:00 -i $VIDEOCHUNKPATH/xaa.mp4 -r 120 -q 0 -t 30 $IMAGESTACKPATH/%14d.jpg
