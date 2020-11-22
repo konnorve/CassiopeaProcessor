@@ -26,13 +26,15 @@
 module load gcc openmpi
 module load python
 module load gnu-parallel/2019.03.22
-source activate CassiopeaProcessor
+## source activate CassiopeaProcessor
+source activate myenv
 
-POSTINIT_DF_PATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
+##POSTINIT_DF_PATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
+POSTINIT_DF_PATH=/global/scratch/lilianzhang/Janis/20200726_Janis_606pm_cam1_1
 PARENTDIR="$(dirname "$POSTINIT_DF_PATH")"
 TEMPOUTDIR=$PARENTDIR/stdout
 
 mkdir $TEMPOUTDIR
 
-parallel --results $TEMPOUTDIR python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor-FinalTest/VideoProcessor_Main.py ::: $POSTINIT_DF_PATH ::: $(seq 60)
+parallel --results $TEMPOUTDIR python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/VideoProcessor_Main.py ::: $POSTINIT_DF_PATH ::: $(seq 60)
 
