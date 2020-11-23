@@ -20,7 +20,7 @@ def getBinaryAreas(filesSubset, lowerThreshold, DEBUG = False):
     binaryImageAreas = []
     for i in range(len(filesSubset)):
         if i % 100 == 0 and DEBUG: print("recieved areas up to pulse: {}".format(i))
-        jellyimage = im.getJellyImageFromFile(str(filesSubset[i]))
+        jellyimage = im.getJellyImageFromFile(filesSubset[i])
         jellyimagebinary = im.getBinaryJelly(jellyimage, lowerThreshold)
         jellyBinaryArea = im.findBinaryArea(jellyimagebinary)
         binaryImageAreas.append(jellyBinaryArea)

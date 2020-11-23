@@ -94,6 +94,11 @@ def replaceDir(outputDir):
 
 
 def getFrameNumFromFile(file):
+    """
+
+    :param file: Pathlib object
+    :return:
+    """
     return int(str(file.name)[:str(file.name).find('.')])
 
 
