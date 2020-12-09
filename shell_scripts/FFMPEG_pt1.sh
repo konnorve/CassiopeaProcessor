@@ -36,8 +36,10 @@ FRAMERATE=120
 
 mkdir $TEMPOUTDIR
 mkdir $IMAGESTACKPATH
+
 ls $VIDEOCHUNKPATH/*.mp4 | parallel mkdir $IMAGESTACKPATH/{/.}
 ls $VIDEOCHUNKPATH/*.mp4 | parallel --results $TEMPOUTDIR ffmpeg -i {} -r $FRAMERATE -q 0 $IMAGESTACKPATH/{/.}/%14d.jpg
 
-
-#ffmpeg -ss 00:03:00 -i $VIDEOCHUNKPATH/xaa.mp4 -r 120 -q 0 -t 30 $IMAGESTACKPATH/%14d.jpg
+# for individual chunks
+#ffmpeg -ss 00:06:30 -i $VIDEOCHUNKPATH/xae.mp4 -r 120 -q 0 $IMAGESTACKPATH/xae/%14d.jpg
+#ffmpeg -i $VIDEOCHUNKPATH/xaf.mp4 -r 120 -q 0 -t 1 $IMAGESTACKPATH/xaf/%14d.jpg

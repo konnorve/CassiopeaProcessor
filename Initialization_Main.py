@@ -3,12 +3,12 @@ from pathlib import Path
 import DataMethods as dm
 
 # should all be in the same recording directory from Savio (recordingOutputDir)
-recordingHomeDir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_11.nosync/Mitotracker/Home/')
+recordingHomeDir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_11.nosync/DTC_Jellies/SaraB/')
 
 #automatic procurement from home directories if labeled right
 pathOfPreInitializationDFDir = recordingHomeDir / 'Initialization_DF'
 pathOfPreInitializationDFPath = dm.getCSVFilePaths(pathOfPreInitializationDFDir)[0]
-pathOfInitializationStack = recordingHomeDir / 'Initialization_Stack_20201111_MitoTracker_320pm_1hrmito_treatment_baseline_cam6_1'
+pathOfInitializationStack = recordingHomeDir / 'Initialization_Stack'
 
 print(recordingHomeDir.name)
 

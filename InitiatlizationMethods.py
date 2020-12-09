@@ -440,7 +440,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     numConsecutiveDrops = 7
 
     # static variables across all recordings
-    movementThreshold4reinitialization = 50
+    movementThreshold4reinitialization = 20
     movementThreshold2KeepMoving = 5
     movementThreshold4newNormalizationImg = 5
     pct2skip4RefractionaryPeriod = 3 / 4
