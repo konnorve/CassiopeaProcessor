@@ -165,6 +165,11 @@ def initialize_params(files, startingFrameNum):
     if len(peaksOnBinaryImage) != 0:
         # complete automated area thresholding based on averageTroughBinaryArea
         lowerThreshold = init.autoLowerThreshold(averageTroughBinaryArea, peak2TroughDiff, peaksOnBinaryImage, fileSubset, thresholdingDir, recordingName)
+    # temporary fix. hard coded for DTC_rescue series # todo: create new autolowerthreshold
+    if len(peaksOnBinaryImage) == 0 or lowerThreshold < 0.15:
+        print('chose default threshold for DTC_rescue. length peaksOnBinaryImage: {}; previous lowerThreshold: {}'.format(len(peaksOnBinaryImage), lowerThreshold))
+        lowerThreshold = 0.2
+
 
     saveSegmentVariableParams()
 
