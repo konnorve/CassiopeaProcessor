@@ -162,8 +162,9 @@ def initialize_params(files, startingFrameNum):
 
     peaksOnBinaryImage = init.downturnFinder(fileSubset, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
 
-    # complete automated area thresholding based on averageTroughBinaryArea
-    lowerThreshold = init.autoLowerThreshold(averageTroughBinaryArea, peak2TroughDiff, peaksOnBinaryImage, fileSubset, thresholdingDir, recordingName)
+    if len(peaksOnBinaryImage) != 0:
+        # complete automated area thresholding based on averageTroughBinaryArea
+        lowerThreshold = init.autoLowerThreshold(averageTroughBinaryArea, peak2TroughDiff, peaksOnBinaryImage, fileSubset, thresholdingDir, recordingName)
 
     saveSegmentVariableParams()
 
@@ -257,6 +258,7 @@ def differenceAngleFinder(files):
     counter = 0
     peak = 0
     pulseCountInQuestionablyStationary = 0
+    centroid = None
 
     data = []
     movingPeaks = []
@@ -559,7 +561,8 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     
     # parameters that were automatically initialized
     lastFrameOfPreviousChunk = params_chunkRow['lastFrameOfPreviousChunk']
-    framesInChunk = params_chunkRow['NumFramesInChunk']
+    # framesInChunk = params_chunkRow['NumFramesInChunk']   # this does not work anymore because we mutate
+                                                            # NumFramesInChunk to align chunks by time
 
     # Parameters not from param_df
     # Parameters reinitialized at the start of each data segment
@@ -576,6 +579,7 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
 
     # loads in files from FFMPEG Stack located at 'videoImageStackDir'
     files = dm.getFrameFilePaths(videoImageStackDir)
+    framesInChunk = len(files)
 
     if chunkRow%4 == 0:
         chunkVerDir = dm.makeOutDir(verificationDir, chunkName)
