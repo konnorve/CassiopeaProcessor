@@ -10,11 +10,11 @@
 #
 #
 # Wall clock limit:
-#SBATCH --time=48:00:00
+#SBATCH --time=72:00:00
 #
 #SBATCH --mail-type=END,FAIL
 #
-#SBATCH --mail-user=kve@berkeley.edu
+#SBATCH --mail-user=lilianzhang@berkeley.edu
 #
 # Request one node:
 #SBATCH --nodes=1
@@ -26,11 +26,9 @@
 module load gcc openmpi
 module load python
 module load gnu-parallel/2019.03.22
-## source activate CassiopeaProcessor
 source activate myenv
 
-##POSTINIT_DF_PATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
-POSTINIT_DF_PATH=/global/scratch/lilianzhang/Janis/20200726_Janis_606pm_cam1_1
+POSTINIT_DF_PATH=/global/scratch/lilianzhang/Janis/20200726_Janis_606pm_cam1_1_PostInitialization.csv
 PARENTDIR="$(dirname "$POSTINIT_DF_PATH")"
 TEMPOUTDIR=$PARENTDIR/stdout
 
