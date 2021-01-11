@@ -16,16 +16,12 @@ DEBUG = True
 CHIME = True
 ########################################################################################################################
 
-def getBinaryAreas(filesSubset, lowerThreshold, DEBUG = False):
-    binaryImageAreas = []
-    for i in range(len(filesSubset)):
-        if i % 100 == 0 and DEBUG: print("recieved areas up to pulse: {}".format(i))
-        jellyimage = im.getJellyImageFromFile(filesSubset[i])
-        jellyimagebinary = im.getBinaryJelly(jellyimage, lowerThreshold)
-        jellyBinaryArea = im.findBinaryArea(jellyimagebinary)
-        binaryImageAreas.append(jellyBinaryArea)
+def getBinaryAreas(init_movie_np, lowerThreshold):
 
-    return binaryImageAreas
+    temp_thresholded_movie_arr = init_movie_np > lowerThreshold
+    temp_area_list = np.sum(temp_thresholded_movie_arr, axis=(1, 2))
+
+    return temp_area_list
 
 
 def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
@@ -55,14 +51,15 @@ def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
     plt.savefig(str(outpath), bbox_inches='tight')
     plt.close()
 
-def downturnFinder(files, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff, DEBUG = False):
 
-
+def downturnFinder(init_movie, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff, DEBUG = False):
 
     i = 0
-    numFiles = len(files)
+    numFiles = len(init_movie)
 
     print('searching for peaks (downturnfinder) on {} number of files'.format(numFiles))
+
+    binary_areas = getBinaryAreas(init_movie, lowerThresh)
 
     peakIndicies = []
 
@@ -72,9 +69,7 @@ def downturnFinder(files, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops
         testAreas = []  # this list should never be more than 5 entries long, ex. [253, 255, 256, 255, 255]
 
         while len(testFrames) < numberOfConsecutiveDrops and j < numFiles:
-            image = im.getJellyImageFromFile(files[j])
-            binary_image = im.getBinaryJelly(image, lowerThresh)
-            area = im.findBinaryArea(binary_image)
+            area = binary_areas[j]
 
             testFrames.append(j)
             testAreas.append(area)
@@ -102,9 +97,7 @@ def downturnFinder(files, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops
             testFrames.pop(0)
             testAreas.pop(0)
 
-            image = im.getJellyImageFromFile(files[i])
-            binary_image = im.getBinaryJelly(image, lowerThresh)
-            area = im.findBinaryArea(binary_image)
+            area = binary_areas[j]
 
             testFrames.append(i)
             testAreas.append(area)
@@ -112,143 +105,71 @@ def downturnFinder(files, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops
 
     return peakIndicies
 
-def initialParameters4thresholding(fileSubset, lowerThreshold, initialRefracPeriod, initializationOutputDir):
 
-    if DEBUG: print('calculating binaryImageAreas for {} file paths\n'.format(len(fileSubset)))
-    binaryImageAreas4thresholding = getBinaryAreas(fileSubset, lowerThreshold)
+def get_roughness_value(np_area_list):
+    area_list = np_area_list.tolist()
+    roughness_value = 0
+    range_of_list = max(area_list) - min(area_list)
 
-    plotOutpath = initializationOutputDir / 'areaVerificationPlot.jpg'
-    saveAreasPlot(binaryImageAreas4thresholding, [], plotOutpath, [])
-
-    if DEBUG: print('calculating peaksOnBinaryImage for {} image areas and {} file paths\n'.format(len(binaryImageAreas4thresholding), len(fileSubset)))
-    peaksOnBinaryImage4thresholding = downturnFinder(fileSubset, initialRefracPeriod, lowerThreshold, 10, 15, 25)
-
-    print('peaksOnBinaryImage4thresholding: {}'.format(peaksOnBinaryImage4thresholding))
-
-    if peaksOnBinaryImage4thresholding[0] < initialRefracPeriod: peaksOnBinaryImage4thresholding.pop(0)
-
-    if DEBUG: print('calculating differences on peaks up to {}\n'.format(peaksOnBinaryImage4thresholding[-1]))
-    troughsOnBinaryImage4thresholding = dm.getTroughs(binaryImageAreas4thresholding)
-    peak2TroughDiff4thresholding = dm.likelyPostPeakTroughDiff(troughsOnBinaryImage4thresholding,
-                                                               peaksOnBinaryImage4thresholding)
-    peak2InflectionDiff4thresholding = dm.getLikelyInflectionDiff(binaryImageAreas4thresholding,
-                                                                  peaksOnBinaryImage4thresholding)
-
-    return [peaksOnBinaryImage4thresholding, peak2TroughDiff4thresholding, peak2InflectionDiff4thresholding]
-
-def autoLowerThreshold(averageTroughBinaryArea, peak2TroughDiff, peaksOnBinaryImage, fileSubset, thresholdingDir, recordingName):
-    # completed automated based on averageTroughBinaryArea
-    thresholdStep = 0.005
-    chosenThreshold = 0.05
-
-    testTroughAverage = averageTroughBinaryArea + 1
-
-    while testTroughAverage > averageTroughBinaryArea:
-        chosenThreshold += thresholdStep
-
-        troughAreas = []
-        for i, peak in enumerate(peaksOnBinaryImage):
-            if peak + peak2TroughDiff < len(fileSubset):
-
-                troughInfile = fileSubset[peak + peak2TroughDiff]
-
-                troughImg = im.getJellyGrayImageFromFile(troughInfile)
-
-                binaryTroughImg = im.getBinaryJelly(troughImg, chosenThreshold)
-
-                jellyTroughBinaryArea = im.findBinaryArea(binaryTroughImg)
-
-                troughAreas.append(jellyTroughBinaryArea)
-
-        testTroughAverage = np.mean(troughAreas)
-
-        print('chosenThreshold: {} (test area, {}; target area, {})'.format(chosenThreshold, testTroughAverage,
-                                                                            averageTroughBinaryArea))
-
-    for i, peak in enumerate(peaksOnBinaryImage):
-        if peak + peak2TroughDiff < len(fileSubset):
-            peakInfile = fileSubset[peak]
-            troughInfile = fileSubset[peak + peak2TroughDiff]
-
-            peakImg = im.getJellyGrayImageFromFile(peakInfile)
-            troughImg = im.getJellyGrayImageFromFile(troughInfile)
-
-            binaryPeakImg = im.getBinaryJelly(peakImg, chosenThreshold)
-            binaryTroughImg = im.getBinaryJelly(troughImg, chosenThreshold)
-
-            im.saveJellyPlot(im.juxtaposeImages(np.array([[binaryPeakImg, binaryTroughImg]])),
-                             (thresholdingDir / '{}_thresholdVerification_{}.png'.format(recordingName, peak)))
-
-    return chosenThreshold
+    while len(area_list) >= 4:
+        a = area_list[0]
+        b = area_list[1]
+        c = area_list[2]
+        d = area_list[3]
+        jerk = (a - (3 * b) + (3 * c) - d)
+        normalized_jerk = np.abs(jerk) / range_of_list
+        roughness_value += np.abs(normalized_jerk)
+        area_list.pop(0)
+    return roughness_value
 
 
-def selectAverageTroughBinaryArea(fileSubset, thresholdingDir, recordingName, peaksOnBinaryImage, peak2InflectionDiff, peak2TroughDiff):
-    maxIntensities = []
-    minIntensities = []
-    for i, peak in enumerate(peaksOnBinaryImage):
-        if peak + peak2InflectionDiff >= 0 and peak + peak2TroughDiff < len(fileSubset):
-            troughInfile = fileSubset[peak + peak2TroughDiff]
-            relaxedInfile = fileSubset[peak + peak2InflectionDiff]
-            troughImg = im.getJellyGrayImageFromFile(troughInfile)
-            relaxedImg = im.getJellyGrayImageFromFile(relaxedInfile)
+def get_area_array(init_movie_np, threshold_ops):
+    area_array = []
 
-            centroidDiff = im.getGrayscaleImageDiff_absolute(troughImg, relaxedImg)
-            binaryCentroidDiff = im.getBinaryJelly(centroidDiff, lower_bound=0.05)
-            maskedImg = im.applyMask2Img(binaryCentroidDiff, relaxedImg)
-            jellyRegion = im.findJellyRegionWithGray(binaryCentroidDiff, maskedImg)
-            maxIntensity = jellyRegion.max_intensity
-            minIntensity = jellyRegion.min_intensity
-            maxIntensities.append(maxIntensity)
-            minIntensities.append(minIntensity)
+    for i in range(len(threshold_ops)):
+        area_array.append(getBinaryAreas(init_movie_np, threshold_ops[i]))
 
-    indensityDifference = np.mean(maxIntensities) - np.mean(minIntensities)
-
-    lowerThreshold = np.mean(minIntensities) + (0.1 * indensityDifference)
-
-    print('peak2TroughDiff: {}'.format(peak2TroughDiff))
-
-    while True:
-
-        troughAreas = []
-
-        for peak in peaksOnBinaryImage:
-            peakInfile = fileSubset[peak]
-            troughInfile = fileSubset[peak+peak2TroughDiff]
-
-            peakImg = im.getJellyGrayImageFromFile(peakInfile)
-            troughImg = im.getJellyGrayImageFromFile(troughInfile)
-
-            binaryPeakImg = im.getBinaryJelly(peakImg, lowerThreshold)
-            binaryTroughImg = im.getBinaryJelly(troughImg, lowerThreshold)
-
-            im.saveJellyPlot(im.juxtaposeImages(np.array([[binaryPeakImg, binaryTroughImg]])),
-                             (thresholdingDir / '{}_thresholdVerification_{}.png'.format(recordingName, peak)))
-
-            jellyTroughBinaryArea = im.findBinaryArea(binaryTroughImg)
-
-            troughAreas.append(jellyTroughBinaryArea)
-
-        if CHIME: dm.chime(MAC, 'input time')
-        print('average trough area: {}, sd of trough areas: {}'.format(np.mean(troughAreas), np.std(troughAreas)))
-
-        print('Change thresholds: ')
-        print('select \'1\' to change {} which is {}'.format('lowerThreshold', lowerThreshold))
-        print('select \'2\' to remove a peak from peaksOnBinaryImage')
-        print('or \'3\' to continue.')
-
-        selectionVar = dm.getSelection([1, 2, 3])
-        if selectionVar == '1':
-            lowerThreshold = dm.reassignFloatVariable(lowerThreshold, 'lowerThreshold')
-            dm.replaceDir(thresholdingDir)
-        elif selectionVar == '2':
-            print('peaksOnBinaryImage: {}'.format(peaksOnBinaryImage))
-            index2Pop = int(dm.getSelection(list(range(len(peaksOnBinaryImage)))))
-            peaksOnBinaryImage.pop(index2Pop)
-        else:
-            return np.mean(troughAreas)
+    return area_array
 
 
-def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir):
+def get_roughness_list(area_array):
+    roughness_values = []
+
+    for i in range(len(area_array)):
+        roughness_values.append(get_roughness_value(area_array[i]))
+
+    return roughness_values
+
+
+def get_init_movie(frame_dir):
+    frames = dm.getFrameFilePaths(frame_dir)
+
+    movie_frame_list = []
+
+    for frame in frames:
+        movie_frame_list.append(im.getJellyGrayImageFromFile(frame))
+
+    init_movie_np = np.array(movie_frame_list)
+
+    return init_movie_np
+
+
+def get_min_roughness_threshold(roughness_list, threshold_ops):
+    return threshold_ops[roughness_list.index(min(roughness_list))]
+
+
+
+# TODO: save out roughness curve
+def autoLowerThreshold(init_movie, threshold_ops = [x / 1000 for x in range(60, 350, 5)], threshold_saveOut_dir = None):
+
+    area_array = get_area_array(init_movie, threshold_ops)
+
+    roughness_list = get_roughness_list(area_array)
+
+    return get_min_roughness_threshold(roughness_list, threshold_ops)
+
+
+def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir):
 
     # make directory to store verification jelly plots
     postInflectionDiffCases = list(range(2, 9))
@@ -269,10 +190,8 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
     byEyeAngleDF.to_csv(str(byEyeAngleDFioPath), index=False)
 
     for i, peak in enumerate(peaksOnBinaryImage):
-        troughInfile = fileSubset[peak + peak2TroughDiff]
-        relaxedInfile = fileSubset[peak + peak2InflectionDiff]
-        troughImg = im.getJellyGrayImageFromFile(troughInfile)
-        relaxedImg = im.getJellyGrayImageFromFile(relaxedInfile)
+        troughImg = init_movie[peak + peak2TroughDiff]
+        relaxedImg = init_movie[peak + peak2InflectionDiff]
 
         centroidDiff = im.getGrayscaleImageDiff_absolute(troughImg, relaxedImg)
         binaryCentroidDiff = im.getBinaryJelly(centroidDiff, lower_bound=0.05)
@@ -282,8 +201,7 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
         centroidVerOutFile = centroidDir / 'centroid for {} - {:03}.png'.format(recordingName, peak + peak2InflectionDiff)
         im.saveJellyPlot(im.getCentroidVerificationImg(centroidDiff, binaryCentroidDiff, centroid), centroidVerOutFile)
 
-        peakInfile = fileSubset[peak]
-        peakImg = im.getJellyGrayImageFromFile(peakInfile)
+        peakImg = init_movie[peak]
         peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
         binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05)
         averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
@@ -295,8 +213,7 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, fileSubset, recordingNa
         # dealing with inflection thresholding
         testDiffImages = []
         for j in postInflectionDiffCases:
-            testInfile = fileSubset[peak + peak2InflectionDiff + j]
-            testImg = im.getJellyGrayImageFromFile(testInfile)
+            testImg = init_movie[peak + peak2InflectionDiff + j]
             testDiff = im.getGrayscaleImageDiff_absolute(testImg, relaxedImg)
             normalizedTestDiff = testDiff / averagedDynamicRangeMaskedImg
             testDiffImages.append(normalizedTestDiff)
@@ -516,29 +433,20 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     if DEBUG: print('intial parameters set\n')
 
-    peaksOnBinaryImage, peak2TroughDiff, peak2InflectionDiff = initialParameters4thresholding(initializationStack,
-                                                                                             lowerThreshold,
-                                                                                             postPeakRefractoryPeriod,
-                                                                                             initializationOutputDir)
-
-    print('{}:\n {}, {}'.format(peaksOnBinaryImage, peak2TroughDiff, peak2InflectionDiff))
-
-    if DEBUG: print('calculating averageTroughBinaryArea\n')
-    averageTroughBinaryArea = selectAverageTroughBinaryArea(initializationStack, thresholdingDir, recordingName, peaksOnBinaryImage, peak2InflectionDiff, peak2TroughDiff)
-
-    saveVariableParams()
+    if DEBUG: print('loading initialization stack\n')
+    init_movie = get_init_movie(initializationStack)
 
     if DEBUG: print('calculating lowerThreshold\n')
-    lowerThreshold = autoLowerThreshold(averageTroughBinaryArea, peak2TroughDiff, peaksOnBinaryImage,initializationStack, thresholdingDir, recordingName)
+    lowerThreshold = autoLowerThreshold(init_movie, threshold_saveOut_dir = None)
 
     saveVariableParams()
 
     if DEBUG: print('getting BinaryAreas\n')
-    binaryImageAreas = getBinaryAreas(initializationStack, lowerThreshold)
+    binaryImageAreas = getBinaryAreas(init_movie, lowerThreshold)
 
     if DEBUG: print('getting peaksOnBinaryImage\n')
     # gets peak frame nums from binaryImageAreas
-    peaksOnBinaryImage = downturnFinder(initializationStack, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
+    peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
 
     # gets peak2TroughDiff from peaksOnBinaryImage and binaryImageAreas
     troughsOnBinaryImage = dm.getTroughs(binaryImageAreas)
@@ -572,7 +480,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
         elif selectionVar == '2':
             numConsecutiveDrops = dm.reassignIntVariable(numConsecutiveDrops, 'numConsecutiveDrops')
 
-            peaksOnBinaryImage = downturnFinder(initializationStack, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
+            peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
             troughsOnBinaryImage = dm.getTroughs(binaryImageAreas)
             peak2TroughDiff = dm.likelyPostPeakTroughDiff(troughsOnBinaryImage, peaksOnBinaryImage)
             peak2InflectionDiff = dm.getLikelyInflectionDiff(binaryImageAreas, peaksOnBinaryImage)
@@ -603,7 +511,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     if DEBUG: print('Running \'selectInflectionThresholdandDiff\'\n')
 
-    inflectionTestDiff, inflectionTestBinaryThreshold, chosenSD = selectInflectionThresholdandDiff(peaksOnBinaryImage, initializationStack, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir)
+    inflectionTestDiff, inflectionTestBinaryThreshold, chosenSD = selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir)
 
     saveVariableParams()
 

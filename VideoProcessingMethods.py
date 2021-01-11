@@ -160,22 +160,19 @@ def initialize_params(files, startingFrameNum):
     segmentOrientationDir = dm.makeOutDir(segmentVerificationDir, '{}_RelaxedFramesForOrientation'.format(segmentName))
     dynamicRangeDir = dm.makeOutDir(segmentVerificationDir, '{}_dynamicRangeNormalizationImages'.format(segmentName))
 
-    peaksOnBinaryImage = init.downturnFinder(fileSubset, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
 
-    if len(peaksOnBinaryImage) != 0:
-        # complete automated area thresholding based on averageTroughBinaryArea
-        lowerThreshold = init.autoLowerThreshold(averageTroughBinaryArea, peak2TroughDiff, peaksOnBinaryImage, fileSubset, thresholdingDir, recordingName)
-    # temporary fix. hard coded for DTC_rescue series # todo: create new autolowerthreshold
-    if len(peaksOnBinaryImage) == 0 or lowerThreshold < 0.15:
-        print('chose default threshold for DTC_rescue. length peaksOnBinaryImage: {}; previous lowerThreshold: {}'.format(len(peaksOnBinaryImage), lowerThreshold))
-        lowerThreshold = 0.2
+    if DEBUG: print('loading initialization stack\n')
+    init_movie = init.get_init_movie(fileSubset)
 
+    if DEBUG: print('calculating lowerThreshold\n')
+    lowerThreshold = init.autoLowerThreshold(init_movie, threshold_saveOut_dir = thresholdingDir)
 
     saveSegmentVariableParams()
 
     # get areas of jellies both the region and the whole value true in binary image.
-    binaryImageAreas = init.getBinaryAreas(fileSubset, lowerThreshold)
-    peaksOnBinaryImage = init.downturnFinder(fileSubset, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
+    # TODO: Change this to faster np method
+    binaryImageAreas = init.getBinaryAreas(init_movie, lowerThreshold)
+    peaksOnBinaryImage = init.downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
 
     plotOutpath = segmentVerificationDir / '{}_areaPlot.png'.format(segmentName)
     init.saveAreasPlot(binaryImageAreas, peaksOnBinaryImage, plotOutpath,
@@ -531,6 +528,7 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     global currentSegmentEndingFrame # variable that tracks the ending frame number for each movement segment
     global isChunkAnalysisFinished # variable that tells you if the chunk analysis is fully finished
 
+
     # Initializing Savio specific information on running these chunks
     startTimeOfAnalysis = datetime.datetime.now()
     elapsedTime = None
@@ -549,7 +547,7 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     chunkName = params_chunkRow['ChunkName']
     
     # parameters that were manually initialized
-    averageTroughBinaryArea = params_chunkRow['averageTroughBinaryArea']
+    averageTroughBinaryArea = params_chunkRow['averageTroughBinaryArea']        # TODO: Take out reference of all averageTroughBinaryArea
     peak2InflectionDiff = params_chunkRow['peak2InflectionDiff']
     peak2TroughDiff = params_chunkRow['peak2TroughDiff']
     postPeakRefractoryPeriod = params_chunkRow['postPeakRefractoryPeriod']
