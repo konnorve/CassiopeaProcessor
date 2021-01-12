@@ -31,7 +31,7 @@ def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
         diffFramesBasedOnPeak = [x + diff for x in peaks]
         diffFrameLists.append(diffFramesBasedOnPeak)
 
-    fig, ax1 = plt.subplots(figsize=(len(areas) / 10, 10))
+    fig, ax1 = plt.subplots(figsize=(len(areas) / 20, 5))
 
     ax1.margins(x=0)
     ax1.set_xticks(np.arange(0, len(areas), 50))
@@ -49,6 +49,19 @@ def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
             ax1.axvspan(x, x + refractionaryPeriod, alpha=0.2, color='red')
 
     plt.savefig(str(outpath), bbox_inches='tight')
+    plt.close()
+
+def saveRoughnessPlot(roughness_values, threshold_ops, outdir):
+
+    fig, ax1 = plt.subplots(figsize=(10, 5))
+
+    ax1.plot(threshold_ops,roughness_values)
+
+    ax1.axvline(get_min_roughness_threshold(roughness_values, threshold_ops))
+
+    ax1.set_title(str(outdir.parent.name))
+
+    plt.savefig(str(outdir / '{}_roughnessPlot.png'.format(outdir.parent.name)), bbox_inches='tight')
     plt.close()
 
 
@@ -97,7 +110,7 @@ def downturnFinder(init_movie, refactoryPeriod, lowerThresh, numberOfConsecutive
             testFrames.pop(0)
             testAreas.pop(0)
 
-            area = binary_areas[j]
+            area = binary_areas[i]
 
             testFrames.append(i)
             testAreas.append(area)
@@ -141,8 +154,7 @@ def get_roughness_list(area_array):
     return roughness_values
 
 
-def get_init_movie(frame_dir):
-    frames = dm.getFrameFilePaths(frame_dir)
+def get_init_movie(frames):
 
     movie_frame_list = []
 
@@ -158,13 +170,14 @@ def get_min_roughness_threshold(roughness_list, threshold_ops):
     return threshold_ops[roughness_list.index(min(roughness_list))]
 
 
-
-# TODO: save out roughness curve
-def autoLowerThreshold(init_movie, threshold_ops = [x / 1000 for x in range(60, 350, 5)], threshold_saveOut_dir = None):
+def autoLowerThreshold(init_movie, threshold_ops = [x / 1000 for x in range(60, 350, 5)], roughness_saveOut_dir = None):
 
     area_array = get_area_array(init_movie, threshold_ops)
 
     roughness_list = get_roughness_list(area_array)
+
+    if roughness_saveOut_dir:
+        saveRoughnessPlot(roughness_list, threshold_ops, roughness_saveOut_dir)
 
     return get_min_roughness_threshold(roughness_list, threshold_ops)
 
@@ -346,21 +359,20 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     lengthOfRecording = timedelta(0, framesInRecording/framerate)
 
     # static variables across single recording that must be initialized
-    averageTroughBinaryArea = None
-    lowerThreshold = 0.3   # not saved in final DF
-    peak2InflectionDiff = None
-    peak2TroughDiff = None
+    lowerThreshold = None
+    peak2InflectionDiff = -15
+    peak2TroughDiff = 30
     postPeakRefractoryPeriod = 40
     inflectionTestDiff = None
     inflectionTestBinaryThreshold = None
     chosenSD = None   # not saved in final DF
-    numConsecutiveDrops = 7
+    numConsecutiveDrops = 10
 
     # static variables across all recordings
     movementThreshold4reinitialization = 20
     movementThreshold2KeepMoving = 5
     movementThreshold4newNormalizationImg = 5
-    pct2skip4RefractionaryPeriod = 3 / 4
+    pct2skip4RefractionaryPeriod = 2 / 5
     numFramesForParamInitialization = 3200 # 120 * 30
     numFrames2ConfirmStationary = 7200  # 120 * 60, 60 seconds of recording to stay stationary (just for testing)
 
@@ -378,7 +390,6 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
             [framesInRecording, 'number of total frames in recording'],
             [lengthOfRecording, 'length of recording in timedelta format'],
 
-            [averageTroughBinaryArea, 'lower threshold to create binary image of jelly to assess area (for downturns)'],
             [lowerThreshold, 'lower threshold to create binary image of jelly to assess area (for downturns)'],
             [peak2InflectionDiff,
              'the number of frames past the peak where the inflection point occurs (this should always be negative)'],
@@ -408,7 +419,6 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
                    'framesInRecording',
                    'lengthOfRecording',
 
-                   'averageTroughBinaryArea',
                    'lowerThreshold',
                    'peak2InflectionDiff',
                    'peak2TroughDiff',
@@ -437,7 +447,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     init_movie = get_init_movie(initializationStack)
 
     if DEBUG: print('calculating lowerThreshold\n')
-    lowerThreshold = autoLowerThreshold(init_movie, threshold_saveOut_dir = None)
+    lowerThreshold = autoLowerThreshold(init_movie, roughness_saveOut_dir = initializationOutputDir)
 
     saveVariableParams()
 
@@ -447,6 +457,14 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     if DEBUG: print('getting peaksOnBinaryImage\n')
     # gets peak frame nums from binaryImageAreas
     peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
+
+    for peak in peaksOnBinaryImage:
+        init_movie_binary = init_movie > lowerThreshold
+
+        thresholdingImgOutfile = thresholdingDir / 'thresholdingImg_{:03}.png'.format(peak)
+
+        im.saveJellyPlot(init_movie_binary[peak], thresholdingImgOutfile)
+
 
     # gets peak2TroughDiff from peaksOnBinaryImage and binaryImageAreas
     troughsOnBinaryImage = dm.getTroughs(binaryImageAreas)
@@ -521,7 +539,6 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     postInitiationDF = preInitializationDf.copy()
 
     # static params for each recording
-    postInitiationDF['averageTroughBinaryArea'] =  averageTroughBinaryArea  # trough area to use in setting lower threshold automatically
     postInitiationDF['peak2InflectionDiff'] =  peak2InflectionDiff  # the number of frames past the peak where the inflection point occurs (this should always be negative)
     postInitiationDF['peak2TroughDiff'] =  peak2TroughDiff  # the number of frames past the peak where the lowest area is found on average
     postInitiationDF['postPeakRefractoryPeriod'] =  postPeakRefractoryPeriod  # the number of frames to preclude from analysis

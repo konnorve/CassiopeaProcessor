@@ -3,7 +3,7 @@ from pathlib import Path
 import DataMethods as dm
 
 # should all be in the same recording directory from Savio (recordingOutputDir)
-recordingHomeDir = Path('/Users/kve/Desktop/Clubs/Harland_Lab/Round_11.nosync/DTC_Jellies/SaraB/')
+recordingHomeDir = Path('/home/kve/Desktop/Labora/Harland_Lab/2021/January/Shakira_home/20200907_Shakira_547pm_cam1_1')
 
 #automatic procurement from home directories if labeled right
 pathOfPreInitializationDFDir = recordingHomeDir / 'Initialization_DF'

@@ -36,7 +36,6 @@ def saveSegmentVariableParams():
         [videoImageStackDir, 'where the image stack for this specific chunk is located'],
         [chunkName, 'the name of this jelly and its video chunk id'],
 
-        [averageTroughBinaryArea, 'trough area to use in setting lower threshold automatically'],
         [peak2InflectionDiff, 'the number of frames past the peak where the inflection point occurs (this should always be negative)'],
         [peak2TroughDiff, 'the number of frames past the peak where the lowest area is found on average'],
         [postPeakRefractoryPeriod, 'the number of frames to preclude from analysis'],
@@ -78,7 +77,6 @@ def saveSegmentVariableParams():
             'videoImageStackDir',
             'chunkName',
 
-            'averageTroughBinaryArea',
             'peak2InflectionDiff',
             'peak2TroughDiff',
             'postPeakRefractoryPeriod',
@@ -165,12 +163,11 @@ def initialize_params(files, startingFrameNum):
     init_movie = init.get_init_movie(fileSubset)
 
     if DEBUG: print('calculating lowerThreshold\n')
-    lowerThreshold = init.autoLowerThreshold(init_movie, threshold_saveOut_dir = thresholdingDir)
+    lowerThreshold = init.autoLowerThreshold(init_movie, roughness_saveOut_dir = thresholdingDir)
 
     saveSegmentVariableParams()
 
     # get areas of jellies both the region and the whole value true in binary image.
-    # TODO: Change this to faster np method
     binaryImageAreas = init.getBinaryAreas(init_movie, lowerThreshold)
     peaksOnBinaryImage = init.downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
 
@@ -490,7 +487,6 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     global chunkName  # the name of this jelly and its video chunk id
 
     # initalized during local manual initiation steps
-    global averageTroughBinaryArea  # trough area to use in setting lower threshold automatically
     global peak2InflectionDiff  # the number of frames past the peak where the inflection point occurs (this should always be negative)
     global peak2TroughDiff  # the number of frames past the peak where the lowest area is found on average
     global postPeakRefractoryPeriod  # the number of frames to preclude from analysis
@@ -547,7 +543,6 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
     chunkName = params_chunkRow['ChunkName']
     
     # parameters that were manually initialized
-    averageTroughBinaryArea = params_chunkRow['averageTroughBinaryArea']        # TODO: Take out reference of all averageTroughBinaryArea
     peak2InflectionDiff = params_chunkRow['peak2InflectionDiff']
     peak2TroughDiff = params_chunkRow['peak2TroughDiff']
     postPeakRefractoryPeriod = params_chunkRow['postPeakRefractoryPeriod']

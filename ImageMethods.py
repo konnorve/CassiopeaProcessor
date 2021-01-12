@@ -183,14 +183,9 @@ def findCentroid_boundingBox(jellyRegion):
     # skimage returns centroid as a y, x list, needs reversal
     return (x_coord, y_coord)
 
-# TODO: improve this method
+
 def findBinaryArea(binaryJellyImage):
-    area = 0
-    for y in range(binaryJellyImage.shape[0]):
-        for x in range(binaryJellyImage.shape[1]):
-            if binaryJellyImage[y][x]:
-                area += 1
-    return area
+    return np.sum(binaryJellyImage)
 
 
 def getBinaryImageDiff(img1, img2):
