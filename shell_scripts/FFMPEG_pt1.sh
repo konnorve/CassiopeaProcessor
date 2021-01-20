@@ -15,8 +15,11 @@
 #
 #SBATCH --mail-user=lilianzhang@berkeley.edu
 #
-##  Number of MPI tasks needed:
-#SBATCH --ntasks=25
+# Request one node:
+#SBATCH --nodes=1
+#
+# Number of MPI tasks needed for use case (example):
+#SBATCH --ntasks=24
 #
 ## Processors per task:
 #SBATCH --cpus-per-task=1
