@@ -229,8 +229,11 @@ def initialize_params(files, startingFrameNum):
             local_com = im.findCentroid_regionProp(biggestRegion)
             zeroDegreePoint = (centroid[0], 0)
 
-        testingOutfile = plotDir / 'testPlot for {} - {:03}.png'.format(segmentName, peak + peak2InflectionDiff)
-        im.saveJellyPlot(binaryDiffImg, testingOutfile, [centroid, zeroDegreePoint, local_com])
+            testingOutfile = plotDir / 'testPlot for {} - {:03}.png'.format(segmentName, peak + peak2InflectionDiff)
+            im.saveJellyPlot(binaryDiffImg, testingOutfile, [centroid, zeroDegreePoint, local_com])
+        else:
+            testingOutfile = plotDir / 'testPlot for {} - {:03}.png'.format(segmentName, peak + peak2InflectionDiff)
+            im.saveJellyPlot(binaryDiffImg, testingOutfile, [centroid])
 
     # saves important parameters used in analysis to csv
     saveSegmentVariableParams()

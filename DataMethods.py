@@ -48,6 +48,7 @@ def getCSVFilePaths(videoImageDir):
     return files
 
 
+
 def getFrameFilePaths(videoImageDir):
     """
     method returns list of sorted, jpg files from inputted stack directory
