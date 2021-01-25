@@ -588,7 +588,7 @@ def runFullVideoAnalysis(chunkRow, postInitiationDFPath):
 
     if chunkRow%4 == 0:
         chunkVerDir = dm.makeOutDir(verificationDir, chunkName)
-        for file in files[:numFramesForParamInitialization]:
+        for file in files[:1600]:
             shutil.copy(str(file), str(chunkVerDir))
 
     initialize_params(files, 0)
