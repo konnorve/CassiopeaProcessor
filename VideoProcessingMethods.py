@@ -205,7 +205,11 @@ def initialize_params(files, startingFrameNum):
         im.saveJellyPlot(im.getCentroidVerificationImg(centroidDiff, binaryCentroidDiff, centroid), centroidVerOutFile)
 
         if i == 0:
-            orientationOutFile = orientationDir / '{}_{:03}.png'.format(chunkName, movementSegment)
+            orientationFrameStamp = dm.getFrameNumFromFile(peakInfile)
+
+            orientationTimeStamp = int(orientationFrameStamp / framerate)
+
+            orientationOutFile = orientationDir / '{}_ts_{:02}h_{:02}m_{:02}s_{:03}.png'.format(chunkName, int(orientationTimeStamp/3600),int(orientationTimeStamp/60)%60, orientationTimeStamp%60, movementSegment)
             im.saveJellyPlot(relaxedImg, orientationOutFile, [centroid, (centroid[0], 15)])
 
         orientationOutFile = segmentOrientationDir / 'relaxedFrame_{:03}.png'.format(peak + peak2InflectionDiff)
