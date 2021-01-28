@@ -9,7 +9,7 @@
 #SBATCH --partition=savio2_htc
 #
 # Wall clock limit:
-#SBATCH --time=00:30:00
+#SBATCH --time=03:00:00
 #
 #SBATCH --mail-type=END,FAIL
 #
@@ -27,7 +27,7 @@ module load gnu-parallel/2019.03.22
 source activate myenv
 
 VIDEOSCRATCHPATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
-HOMEDIRPATH= $VIDEOSCRATCHPATH
+HOMEDIRPATH=$VIDEOSCRATCHPATH
 
 python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/FFMPEG_p2.py $VIDEOSCRATCHPATH $HOMEDIRPATH
 
