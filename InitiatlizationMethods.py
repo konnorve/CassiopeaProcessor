@@ -123,6 +123,7 @@ def get_roughness_value(np_area_list):
     area_list = np_area_list.tolist()
     roughness_value = 0
     range_of_list = max(area_list) - min(area_list)
+    scalar = np.power(range_of_list, 2)
 
     while len(area_list) >= 4:
         a = area_list[0]
@@ -130,11 +131,13 @@ def get_roughness_value(np_area_list):
         c = area_list[2]
         d = area_list[3]
         jerk = (a - (3 * b) + (3 * c) - d)
-        normalized_jerk = np.abs(jerk) / range_of_list
+        normalized_jerk = np.abs(jerk) / scalar
         roughness_value += np.abs(normalized_jerk)
         area_list.pop(0)
     return roughness_value
 
+def polynomialAdjustment(thresh, power=4, center=0.2, amplitude=1500):
+    return amplitude*pow(thresh-center, power) + 1
 
 def get_area_array(init_movie_np, threshold_ops):
     area_array = []
@@ -149,7 +152,20 @@ def get_roughness_list(area_array):
     roughness_values = []
 
     for i in range(len(area_array)):
-        roughness_values.append(get_roughness_value(area_array[i]))
+        roughness_value = get_roughness_value(area_array[i])
+
+        roughness_values.append(roughness_value)
+
+    return roughness_values
+
+def get_roughness_list_adj(area_array, threshold_options):
+    roughness_values = []
+
+    for i in range(len(threshold_options)):
+        roughness_value = get_roughness_value(area_array[i])
+        roughness_value_adj = roughness_value*polynomialAdjustment(threshold_options[i])
+        print('thresh: {:04}, rv: {:04}, adj rv: {:04}, ratio: {:04}'.format(threshold_options[i], roughness_value, roughness_value_adj, roughness_value_adj/roughness_value))
+        roughness_values.append(roughness_value_adj)
 
     return roughness_values
 
@@ -174,7 +190,7 @@ def autoLowerThreshold(init_movie, threshold_ops = [x / 1000 for x in range(60, 
 
     area_array = get_area_array(init_movie, threshold_ops)
 
-    roughness_list = get_roughness_list(area_array)
+    roughness_list = get_roughness_list_adj(area_array, threshold_ops)
 
     if roughness_saveOut_dir:
         saveRoughnessPlot(roughness_list, threshold_ops, roughness_saveOut_dir)
@@ -185,8 +201,8 @@ def autoLowerThreshold(init_movie, threshold_ops = [x / 1000 for x in range(60, 
 def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir):
 
     # make directory to store verification jelly plots
-    postInflectionDiffCases = list(range(2, 9))
-    thresholdCases = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]
+    postInflectionDiffCases = list(range(4, 14))
+    thresholdCases = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
 
     # out data: pulse angles x testDiffs
     angleData = np.empty((len(peaksOnBinaryImage), len(postInflectionDiffCases), len(thresholdCases)))  # 3D array

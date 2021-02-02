@@ -55,6 +55,8 @@ def saveOutVerificationCSV(angleDataPath):
     # concats all the dataframes into one pandas df
     simpleConcatDF = pd.concat(simpleDFs)
 
+    # TODO: add verification column
+
     outPath = angleDataPath.parent / '{}_orientations_blank.csv'.format(orientationDirPath.name)
 
     simpleConcatDF.to_csv(outPath, index=False)
@@ -68,5 +70,5 @@ angleDirPath = Path('/home/kve/Desktop/Labora/Harland_Lab/2021-1/Shakira_home/Sh
 
 # TODO: Check function
 
-[saveOutVerificationCSV(dir) for dir in angleDirPath.iterdir() if dir.is_dir()]
+# [saveOutVerificationCSV(dir) for dir in angleDirPath.iterdir() if dir.is_dir()]
 
