@@ -9,7 +9,7 @@
 #SBATCH --partition=savio2_htc
 #
 # Wall clock limit:
-#SBATCH --time=00:30:00
+#SBATCH --time=03:00:00
 #
 #SBATCH --mail-type=END,FAIL
 #
