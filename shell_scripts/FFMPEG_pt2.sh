@@ -28,7 +28,8 @@ source activate myenv
 
 VIDEOSCRATCHPATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
 HOMEDIRPATH= $VIDEOSCRATCHPATH
+FRAMERATE = 120
 
-python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/FFMPEG_p2.py $VIDEOSCRATCHPATH $HOMEDIRPATH
+python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/FFMPEG_p2.py $VIDEOSCRATCHPATH $HOMEDIRPATH $FRAMERATE
 
 

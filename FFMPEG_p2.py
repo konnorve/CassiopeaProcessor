@@ -22,7 +22,7 @@ stackDir = parent_Dir / 'Image_Stacks'
 home_Dir = Path(sys.argv[2])
 
 # Frame rate of recording
-framerate = 120
+framerate = Path(sys.argv[3])
 
 
 def makeOutDir(outputDir, folderName):

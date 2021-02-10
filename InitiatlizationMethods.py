@@ -16,6 +16,8 @@ DEBUG = True
 CHIME = True
 ########################################################################################################################
 
+
+# Bottleneck of init_movie usage
 def getBinaryAreas(init_movie_np, lowerThreshold):
 
     temp_thresholded_movie_arr = init_movie_np > lowerThreshold
@@ -142,6 +144,9 @@ def polynomialAdjustment(thresh, power=4, center=0.2, amplitude=1500):
 def get_area_array(init_movie_np, threshold_ops):
     area_array = []
 
+    # rows are lists of image areas
+    # each row is tied to a specific threshold
+
     for i in range(len(threshold_ops)):
         area_array.append(getBinaryAreas(init_movie_np, threshold_ops[i]))
 
@@ -164,7 +169,8 @@ def get_roughness_list_adj(area_array, threshold_options):
     for i in range(len(threshold_options)):
         roughness_value = get_roughness_value(area_array[i])
         roughness_value_adj = roughness_value*polynomialAdjustment(threshold_options[i])
-        print('thresh: {:04}, rv: {:04}, adj rv: {:04}, ratio: {:04}'.format(threshold_options[i], roughness_value, roughness_value_adj, roughness_value_adj/roughness_value))
+        # debugging line below
+        # print('thresh: {:04}, rv: {:04}, adj rv: {:04}, ratio: {:04}'.format(threshold_options[i], roughness_value, roughness_value_adj, roughness_value_adj/roughness_value))
         roughness_values.append(roughness_value_adj)
 
     return roughness_values
@@ -396,6 +402,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     angleArrImageDir = dm.makeOutDir(initializationOutputDir, '{}_AngleArrImageDir'.format(recordingName))
     centroidDir = dm.makeOutDir(initializationOutputDir, '{}_CentroidVerificationDir'.format(recordingName))
     dynamicRangeDir = dm.makeOutDir(initializationOutputDir, '{}_dynamicRangeVerificationDir'.format(recordingName))
+    areaPlotOutpath = initializationOutputDir / 'areaVerificationPlot.jpg'
 
     def saveVariableParams():
         imp_parameters = pd.DataFrame(np.array([
@@ -474,6 +481,12 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     # gets peak frame nums from binaryImageAreas
     peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
 
+    saveAreasPlot(binaryImageAreas, peaksOnBinaryImage, areaPlotOutpath,
+                  [peak2InflectionDiff, peak2InflectionDiff + 5, peak2TroughDiff],
+                  postPeakRefractoryPeriod)
+
+    if DEBUG: print('peaks: {}\n'.format(peaksOnBinaryImage))
+
     for peak in peaksOnBinaryImage:
         init_movie_binary = init_movie > lowerThreshold
 
@@ -481,9 +494,12 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
         im.saveJellyPlot(init_movie_binary[peak], thresholdingImgOutfile)
 
-
     # gets peak2TroughDiff from peaksOnBinaryImage and binaryImageAreas
     troughsOnBinaryImage = dm.getTroughs(binaryImageAreas)
+
+
+    if DEBUG: print('troughs: {}'.format(troughsOnBinaryImage))
+
     peak2TroughDiff = dm.likelyPostPeakTroughDiff(troughsOnBinaryImage, peaksOnBinaryImage)
 
     # initializes inflection diff from jellyRegionAreas
@@ -495,8 +511,8 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     if CHIME: dm.chime(MAC, 'input time')
     while True:
-        plotOutpath = initializationOutputDir / 'areaVerificationPlot.jpg'
-        saveAreasPlot(binaryImageAreas, peaksOnBinaryImage, plotOutpath,
+
+        saveAreasPlot(binaryImageAreas, peaksOnBinaryImage, areaPlotOutpath,
                       [peak2InflectionDiff, peak2InflectionDiff + 5, peak2TroughDiff],
                       postPeakRefractoryPeriod)
 
