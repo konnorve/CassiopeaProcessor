@@ -34,7 +34,7 @@ mkdir -p $TMPDIR # ensure TMPDIR exists
 
 POSTINIT_DF_PATH=/global/scratch/lilianzhang/Janis/20200726_Janis_606pm_cam1_1_PostInitialization.csv
 PARENTDIR="$(dirname "$POSTINIT_DF_PATH")"
-TEMPOUTDIR=$PARENTDIR/stdout
+TEMPOUTDIR=$PARENTDIR/VP_stdout
 
 mkdir $TEMPOUTDIR
 
