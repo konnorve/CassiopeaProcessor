@@ -6,7 +6,7 @@
 #SBATCH --account=fc_xenopus
 #
 # Partition:
-#SBATCH --partition=savio2
+#SBATCH --partition=savio_bigmem
 #
 #
 # Wall clock limit:
