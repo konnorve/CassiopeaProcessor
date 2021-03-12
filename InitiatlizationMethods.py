@@ -395,11 +395,11 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     # static variables across all recordings
     movementThreshold4reinitialization = 20
-    movementThreshold2KeepMoving = 5
+    movementThreshold2KeepMoving = 10
     movementThreshold4newNormalizationImg = 5
     pct2skip4RefractionaryPeriod = 2 / 5
     numFramesForParamInitialization = 3200 # 120 * 30
-    numFrames2ConfirmStationary = 7200  # 120 * 60, 60 seconds of recording to stay stationary (just for testing)
+    numFrames2ConfirmStationary = 3600  # 120 * 60, 60 seconds of recording to stay stationary (just for testing)
 
     thresholdingDir = dm.makeOutDir(initializationOutputDir, '{}_ThresholdingPlots'.format(recordingName))
     angleArrImageDir = dm.makeOutDir(initializationOutputDir, '{}_AngleArrImageDir'.format(recordingName))
