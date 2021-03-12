@@ -391,6 +391,26 @@ def distance(p1, p2):
     dist = math.hypot(p1[0] - p2[0], p1[1] - p2[1])
     return dist
 
+def get_consensus_centroid(centroids):
+    len_cs = len(centroids)
+    if len_cs == 1:
+        return np.array(centroids[0])
+    elif len_cs == 2:
+        return np.mean(centroids, axis=0)
+    else:
+        centroids = centroids.copy()
+        greatest_key = 0
+        greatest_value = 0
+        for i in range(len(centroids)):
+            dist_sum = 0
+            for j in range(len(centroids)):
+                dist_sum += distance(centroids[i], centroids[j])
+            if dist_sum > greatest_value:
+                greatest_value = dist_sum
+                greatest_key = i
+        centroids.pop(greatest_key)
+        return np.mean(centroids, axis=0)
+
 
 def annotateRGBImageAtPoint(image, coord, color_rgb_arr):
     row_limit = image.shape[0]

@@ -265,6 +265,8 @@ def differenceAngleFinder(files):
     peak = 0
     pulseCountInQuestionablyStationary = 0
     centroid = None
+    centroids = []
+    consensus_centroid = None
 
     data = []
     movingPeaks = []
@@ -321,16 +323,81 @@ def differenceAngleFinder(files):
                     if lastStationaryCentroid is None:
                         lastStationaryCentroid = centroid
 
+                    if len(centroids) < 3:
+                        centroids.append(centroid)
+                    elif centroids == 3:
+                        centroids.pop(0)
+                        centroids.append(centroid)
+
+                    consensus_centroid = im.get_consensus_centroid(centroids)
+
                     if CONFIRMATIONIMAGES: im.saveJellyPlot(
                         im.getCentroidVerificationImg(centroidDiff, binaryCentroidDiff, centroid),
                         str(confirmationImagesPath / '{}_{}_centroid.png'.format(peak, chunkName)))
 
-                    if isMoving:
+                    ###### ADDITION 3/12/21 to keep calling angle while moving
 
-                        data.append([peak + lastFrameOfPreviousChunk, peak, np.nan, centroid[0], centroid[1]])
+                    testInfile = files[peak + peak2InflectionDiff + inflectionTestDiff]
+                    testImg = im.getJellyGrayImageFromFile(testInfile)
+
+                    if CONFIRMATIONIMAGES: plt.imsave(
+                        str(confirmationImagesPath / '{}_{}_interestFrames.png'.format(peak, chunkName)),
+                        im.juxtaposeImages(np.array([[relaxedImg, testImg, peakImg, troughImg]])))
+
+                    if centroidBefore is not None:
+                        reinitializeAreaPlot = im.distance(centroid,
+                                                           centroidBefore) > movementThreshold4newNormalizationImg
+                        if reinitializeAreaPlot:
+                            peakInfile = files[peak]
+                            peakImg = im.getJellyGrayImageFromFile(peakInfile)
+                            peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
+                            binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05, upper_bound=1)
+                            averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff,
+                                                                                         5)
+
+                    else:
+                        peakInfile = files[peak]
+                        peakImg = im.getJellyGrayImageFromFile(peakInfile)
+                        peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
+                        binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05, upper_bound=1)
+                        averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
+
+                    centroidBefore = centroid
+
+                    if CONFIRMATIONIMAGES: im.saveJellyPlot(
+                        averagedDynamicRangeMaskedImg,
+                        str(confirmationImagesPath / '{}_{}_dynRng.png'.format(peak, chunkName)))
+
+                    testDiff = im.getGrayscaleImageDiff_absolute(testImg, relaxedImg)
+                    normalizedTestDiff = testDiff / averagedDynamicRangeMaskedImg
+
+                    binaryDiffImg = im.getBinaryJelly(normalizedTestDiff, lower_bound=inflectionTestBinaryThreshold)
+
+                    biggestRegion = im.findJellyRegion(binaryDiffImg)
+
+                    if biggestRegion is not None:
+                        local_com = im.findCentroid_regionProp(biggestRegion)
+                        zeroDegreePoint = (centroid[0], 0)
+
+                        angle = dm.getAngle(zeroDegreePoint, centroid, local_com)
+
+                        if CONFIRMATIONIMAGES: im.saveJellyPlot(
+                            binaryDiffImg, str(confirmationImagesPath / '{}_{}_angle.png'.format(peak, chunkName)),
+                            [centroid, local_com, zeroDegreePoint])
+                    else:
+                        angle = np.nan
+
+                        if CONFIRMATIONIMAGES: im.saveJellyPlot(
+                            binaryDiffImg, str(confirmationImagesPath / '{}_{}_angle.png'.format(peak, chunkName)),
+                            [centroid])
+
+                    ###### END OF ADDITION 3/12/21
+
+                    if isMoving:
+                        data.append([peak + lastFrameOfPreviousChunk, peak, angle, centroid[0], centroid[1]])
 
                         movedBefore = isMoving
-                        isMoving = im.distance(centroid, lastStationaryCentroid) > movementThreshold2KeepMoving
+                        isMoving = im.distance(consensus_centroid, lastStationaryCentroid) > movementThreshold2KeepMoving
 
                         lastStationaryCentroid = centroid
 
@@ -341,9 +408,9 @@ def differenceAngleFinder(files):
 
                     elif isQuestionablyStationary:
 
-                        data.append([peak + lastFrameOfPreviousChunk, peak, np.nan, centroid[0], centroid[1]])
+                        data.append([peak + lastFrameOfPreviousChunk, peak, angle, centroid[0], centroid[1]])
 
-                        isMoving = im.distance(centroid, lastStationaryCentroid) > movementThreshold4reinitialization
+                        isMoving = im.distance(consensus_centroid, lastStationaryCentroid) > movementThreshold4reinitialization
 
                         if isMoving:
                             movingPeaks.append(peak)
@@ -375,67 +442,17 @@ def differenceAngleFinder(files):
 
                             pulseCountInQuestionablyStationary = 0
 
+                            centroids = []
+
                         # until count from current i to last stationary i reaches this point,
                         # the program is in a holding pattern of sorts.
 
                     else:
-                        testInfile = files[peak + peak2InflectionDiff + inflectionTestDiff]
-                        testImg = im.getJellyGrayImageFromFile(testInfile)
-
-                        if CONFIRMATIONIMAGES: plt.imsave(
-                            str(confirmationImagesPath / '{}_{}_interestFrames.png'.format(peak, chunkName)),
-                            im.juxtaposeImages(np.array([[relaxedImg, testImg, peakImg, troughImg]])))
-
-
-                        if centroidBefore is not None:
-                            reinitializeAreaPlot = im.distance(centroid, centroidBefore) > movementThreshold4newNormalizationImg
-                            if reinitializeAreaPlot:
-                                peakInfile = files[peak]
-                                peakImg = im.getJellyGrayImageFromFile(peakInfile)
-                                peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
-                                binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05, upper_bound=1)
-                                averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
-
-                        else:
-                            peakInfile = files[peak]
-                            peakImg = im.getJellyGrayImageFromFile(peakInfile)
-                            peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
-                            binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05, upper_bound=1)
-                            averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
-
-                        centroidBefore = centroid
-
-                        if CONFIRMATIONIMAGES: im.saveJellyPlot(
-                            averagedDynamicRangeMaskedImg, str(confirmationImagesPath / '{}_{}_dynRng.png'.format(peak, chunkName)))
-
-                        testDiff = im.getGrayscaleImageDiff_absolute(testImg, relaxedImg)
-                        normalizedTestDiff = testDiff / averagedDynamicRangeMaskedImg
-
-                        binaryDiffImg = im.getBinaryJelly(normalizedTestDiff, lower_bound=inflectionTestBinaryThreshold)
-
-                        biggestRegion = im.findJellyRegion(binaryDiffImg)
-
-                        if biggestRegion is not None:
-                            local_com = im.findCentroid_regionProp(biggestRegion)
-                            zeroDegreePoint = (centroid[0], 0)
-
-                            angle = dm.getAngle(zeroDegreePoint, centroid, local_com)
-
-                            if CONFIRMATIONIMAGES: im.saveJellyPlot(
-                                binaryDiffImg, str(confirmationImagesPath / '{}_{}_angle.png'.format(peak, chunkName)),
-                                [centroid, local_com, zeroDegreePoint])
-                        else:
-                            angle = np.nan
-
-                            if CONFIRMATIONIMAGES: im.saveJellyPlot(
-                                binaryDiffImg, str(confirmationImagesPath / '{}_{}_angle.png'.format(peak, chunkName)),
-                                [centroid])
-
 
                         data.append([peak + lastFrameOfPreviousChunk, peak, angle, centroid[0], centroid[1]])
 
                         movedBefore = isMoving
-                        isMoving = im.distance(centroid, lastStationaryCentroid) > movementThreshold4reinitialization
+                        isMoving = im.distance(consensus_centroid, lastStationaryCentroid) > movementThreshold4reinitialization
 
                         if isMoving and not movedBefore:
                             isQuestionablyStationary = False

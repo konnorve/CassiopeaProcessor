@@ -207,7 +207,7 @@ def autoLowerThreshold(init_movie, threshold_ops = [x / 1000 for x in range(60, 
 def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir):
 
     # make directory to store verification jelly plots
-    postInflectionDiffCases = list(range(4, 14))
+    postInflectionDiffCases = list(range(2, 12))
     thresholdCases = [0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5]
 
     # out data: pulse angles x testDiffs
@@ -225,6 +225,8 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingNa
     byEyeAngleDF.to_csv(str(byEyeAngleDFioPath), index=False)
 
     for i, peak in enumerate(peaksOnBinaryImage):
+        if DEBUG: print("{}: {}".format(i, peak))
+
         troughImg = init_movie[peak + peak2TroughDiff]
         relaxedImg = init_movie[peak + peak2InflectionDiff]
 
@@ -255,7 +257,8 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingNa
 
         testingOutfile = angleArrImageDir / 'testPlot for {} - {:03}.png'.format(recordingName, peak + peak2InflectionDiff)
         pulseAngleData = im.saveDifferenceTestingAggregationImage(relaxedImg, testDiffImages, thresholdCases,
-                                                                  testingOutfile, False, centroid)
+                                                                  testingOutfile, discludeVerificationArrayImg = False,
+                                                                  centroid = centroid)
 
         for n, row in enumerate(pulseAngleData):
             for m, angle in enumerate(row):
@@ -547,9 +550,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     saveVariableParams()
 
-    peak2InflectionDiff = -16
-    peak2TroughDiff = 33
-
+    # makes sure pulses are within bounds
     i = 0
     while i < len(peaksOnBinaryImage):
         if peaksOnBinaryImage[i] + peak2InflectionDiff < 0 or peaksOnBinaryImage[i] + peak2TroughDiff >= numFramesForParamInitialization:
@@ -557,7 +558,9 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
         else:
             i += 1
 
-
+    # decreases number of by eye measurements if there is a fast pulse rate
+    if len(peaksOnBinaryImage) > 20:
+        peaksOnBinaryImage = peaksOnBinaryImage[:20]
 
     if DEBUG: print('Running \'selectInflectionThresholdandDiff\'\n')
 

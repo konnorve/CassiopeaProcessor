@@ -59,6 +59,9 @@ def saveOutVerificationCSV(angleDataPath):
 
     outPath = angleDataPath.parent / '{}_orientations_blank.csv'.format(orientationDirPath.name)
 
+
+    
+
     simpleConcatDF.to_csv(outPath, index=False)
 
 
