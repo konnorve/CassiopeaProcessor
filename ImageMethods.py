@@ -98,7 +98,7 @@ def getJellyBinaryImageFromFile(imgfile):
 
 
 
-def findJellyRegion(binaryJellyImage, DEBUG=False):
+def findJellyRegion(binaryJellyImage):
 
     labeledmask, numlabels = ndimage.label(binaryJellyImage, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]])
 
@@ -120,10 +120,12 @@ def findJellyRegion(binaryJellyImage, DEBUG=False):
             if clusters[i].area > jellyarea:
                 jelly = clusters[i]
                 jellyarea = jelly.area
-    if jelly == None:
-        return None
-    else:
-        return jelly
+
+    onEdge = False
+    if jelly is None and len(clusters) != 0:
+        onEdge = True
+
+    return jelly, onEdge
 
 
 def findJellyRegionWithGray(binaryJellyImage, grayJellyImage, DEBUG=False):
