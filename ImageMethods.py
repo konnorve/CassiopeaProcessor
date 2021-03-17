@@ -128,37 +128,6 @@ def findJellyRegion(binaryJellyImage):
     return jelly, onEdge
 
 
-def findJellyRegionWithGray(binaryJellyImage, grayJellyImage, DEBUG=False):
-
-    labeledmask, numlabels = ndimage.label(binaryJellyImage, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]])
-
-    dimensions = list(labeledmask.shape)
-
-    height = dimensions[0]
-    width = dimensions[1]
-
-    clusters = measure.regionprops(labeledmask, grayJellyImage)  # create regions
-    jelly = None  # the region that represents the jelly so far
-    jellyarea = 0  # largest jelly area so far
-    for i in range(0, numlabels):  # finds the jelly by finding which region is max area
-        jellydimensions = list(clusters[i].bbox)
-        minrow = jellydimensions[0]
-        mincol = jellydimensions[1]
-        maxrow = jellydimensions[2]
-        maxcol = jellydimensions[3]
-        if minrow != 0 and mincol != 0 and maxrow != height and maxcol != width:  # checks if area is touching the edges
-            if clusters[i].area > jellyarea:
-                jelly = clusters[i]
-                jellyarea = jelly.area
-    if jelly is None:
-        return None
-    else:
-        return jelly
-
-
-def findArea(jellyRegion):
-    return jellyRegion.area
-
 
 def findCentroid_regionProp(jellyRegion):
     """
@@ -476,7 +445,7 @@ def saveDifferenceTestingAggregationImage(relaxedImg, diffImgList, thresholdList
                     annotateRGBImageAtPoint(rgbCompositeImage, (x_coord, y_coord), [0,0,255])
 
                 if i != 0 and j != 0:
-                    biggestRegion = findJellyRegion(imgRows[i][j])
+                    biggestRegion = findJellyRegion(imgRows[i][j])[0]
                     local_com = None
                     if biggestRegion is not None:
                         local_com = findCentroid_regionProp(biggestRegion)

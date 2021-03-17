@@ -349,20 +349,9 @@ def differenceAngleFinder(files):
                             str(confirmationImagesPath / '{}_{}_interestFrames.png'.format(peak, chunkName)),
                             im.juxtaposeImages(np.array([[relaxedImg, testImg, peakImg, troughImg]])))
 
+                        if centroidBefore is None or (im.distance(centroid,
+                                                               centroidBefore) > movementThreshold4newNormalizationImg):
 
-                        # todo: look into this section, understand the reinitialization area plot
-                        if centroidBefore is not None:
-                            reinitializeAreaPlot = im.distance(centroid,
-                                                               centroidBefore) > movementThreshold4newNormalizationImg
-                            if reinitializeAreaPlot:
-                                peakInfile = files[peak]
-                                peakImg = im.getJellyGrayImageFromFile(peakInfile)
-                                peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
-                                binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05, upper_bound=1)
-                                averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff,
-                                                                                             5)
-
-                        else:
                             peakInfile = files[peak]
                             peakImg = im.getJellyGrayImageFromFile(peakInfile)
                             peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
@@ -481,8 +470,6 @@ def differenceAngleFinder(files):
 
 
                     # todo: what is i at this point? is it numconsecutivedrops after peak?
-
-                    # todo: make sure that all instances of findjellyregion are accounted for
 
 
                 testFrames, testAreas, i = reinitializeTestFramesAndAreas(i)

@@ -232,7 +232,7 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingNa
 
         centroidDiff = im.getGrayscaleImageDiff_absolute(troughImg, relaxedImg)
         binaryCentroidDiff = im.getBinaryJelly(centroidDiff, lower_bound=0.05)
-        centroidRegion = im.findJellyRegion(binaryCentroidDiff)
+        centroidRegion = im.findJellyRegion(binaryCentroidDiff)[0]
         centroid = im.findCentroid_boundingBox(centroidRegion)
 
         centroidVerOutFile = centroidDir / 'centroid for {} - {:03}.png'.format(recordingName, peak + peak2InflectionDiff)
