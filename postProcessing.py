@@ -59,15 +59,27 @@ def saveOutVerificationCSV(angleDataPath):
 
     outPath = angleDataPath.parent / '{}_orientations_blank.csv'.format(orientationDirPath.name)
 
-
-    
-
     simpleConcatDF.to_csv(outPath, index=False)
 
 
-orientationDirPath = Path('/home/kve/Desktop/Labora/Harland_Lab/2021-1/Shakira_home/Shakira Orientation Dirs')
+def is_orientation_dir(path):
+    if path.is_dir():
+        if str(path.name).find('_OrientationDir') != -1:
+            return True
+    return False
 
-[saveOutOrientationCSV(dir) for dir in orientationDirPath.iterdir() if dir.is_dir()]
+
+exp_dir = Path('/home/kve/Desktop/Labora/Harland_Lab/2021-03/EDU_cell_proliferation/Proliferation_Experiment/20210307')
+
+for jelly_dir in exp_dir.iterdir():
+    if jelly_dir.is_dir():
+        for treatment_dir in jelly_dir.iterdir():
+            if treatment_dir.is_dir():
+                for dir in treatment_dir.iterdir():
+
+                    if is_orientation_dir(dir):
+                        saveOutOrientationCSV(dir)
+
 
 angleDirPath = Path('/home/kve/Desktop/Labora/Harland_Lab/2021-1/Shakira_home/Shakira Orientation Dirs')
 

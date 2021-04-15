@@ -27,7 +27,7 @@
 #
 #source activate myenv
 
-video_home=/home/kve/Desktop/Leisure/Youtube-dl-FFMPEG-practice/bestOKendrick/test
+video_home=/media/kve/DeepStorage/Sample-Data-20200726_Janis_606pm_cam1_1
 
 for VIDEOSCRATCHPATH in $video_home
 do

@@ -22,14 +22,14 @@
 #SBATCH --cpus-per-task=1
 #
 ## Command(s) to run:
-module load python/3.6
-module load gnu-parallel/2019.03.22
-source activate myenv
+#module load python/3.6
+#module load gnu-parallel/2019.03.22
+#source activate myenv
 
-VIDEOSCRATCHPATH=/global/scratch/kve/Janis/20200726_Janis_606pm_cam1_1
+VIDEOSCRATCHPATH=/media/kve/DeepStorage/Sample-Data-20200726_Janis_606pm_cam1_1
 HOMEDIRPATH=$VIDEOSCRATCHPATH
 FRAMERATE=120
 
-python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/FFMPEG_p2.py $VIDEOSCRATCHPATH $HOMEDIRPATH $FRAMERATE
+# python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/FFMPEG_p2.py $VIDEOSCRATCHPATH $HOMEDIRPATH $FRAMERATE
 
-
+python3 /home/kve/PycharmProjects/CassiopeaProcessor/FFMPEG_p2.py $VIDEOSCRATCHPATH $HOMEDIRPATH $FRAMERATE

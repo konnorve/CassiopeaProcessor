@@ -40,11 +40,12 @@ def saveAreasPlot(areas, peaks, outpath, diffsList, refractionaryPeriod = None):
 
     # looking at first area method based on binary image areas and properties
     ax1.plot(range(len(areas)), areas, color='k')
-    for x in peaks:
-        ax1.axvline(x, color='m')
+
     for diffFramesBasedOnPeak in diffFrameLists:
         for x in diffFramesBasedOnPeak:
             ax1.axvline(x, color='c')
+    for x in peaks:
+        ax1.axvline(x, color='m')
 
     if refractionaryPeriod is not None:
         for x in peaks:
@@ -67,7 +68,8 @@ def saveRoughnessPlot(roughness_values, threshold_ops, outdir):
     plt.close()
 
 
-def downturnFinder(init_movie, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff, DEBUG = False):
+def downturnFinder(init_movie, refactoryPeriod, lowerThresh, numberOfConsecutiveDrops, peak2InflectionDiff,
+                   peak2TroughDiff, DEBUG = False, use_conserved_trough = False):
 
     i = 0
     numFiles = len(init_movie)
@@ -95,11 +97,15 @@ def downturnFinder(init_movie, refactoryPeriod, lowerThresh, numberOfConsecutive
     testFrames, testAreas, i = reinitializeTestFramesAndAreas(i)
 
     while i < numFiles:
-        isDownturn = dm.is_downturn(0, testAreas, numberOfConsecutiveDrops)
+
+        if use_conserved_trough:
+            isDownturn = dm.is_downturn_end(testAreas)
+        else:
+            isDownturn = dm.is_downturn(testAreas)
 
         if DEBUG: print('i: {}, isDownturn: {}, testAreas: {}, testFrames: {}'.format(i, isDownturn, testAreas, testFrames))
 
-        if isDownturn:
+        if isDownturn and not use_conserved_trough:
             peak = i - numberOfConsecutiveDrops
             if peak + peak2InflectionDiff >= 0 and peak + peak2TroughDiff < numFiles:
                 peakIndicies.append(peak)
@@ -108,6 +114,12 @@ def downturnFinder(init_movie, refactoryPeriod, lowerThresh, numberOfConsecutive
 
             testFrames, testAreas, i = reinitializeTestFramesAndAreas(i)
 
+        elif isDownturn and use_conserved_trough:
+            peak = i
+            if peak + peak2InflectionDiff - peak2TroughDiff >= 0:
+                peakIndicies.append(peak)
+
+            testFrames, testAreas, i = reinitializeTestFramesAndAreas(i)
         else:
             testFrames.pop(0)
             testAreas.pop(0)
@@ -204,7 +216,10 @@ def autoLowerThreshold(init_movie, threshold_ops = [x / 1000 for x in range(60, 
     return get_min_roughness_threshold(roughness_list, threshold_ops)
 
 
-def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir):
+def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, use_conserved_trough, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir):
+
+    if use_conserved_trough:
+        peaksOnBinaryImage = [x - peak2TroughDiff for x in peaksOnBinaryImage]
 
     # make directory to store verification jelly plots
     postInflectionDiffCases = list(range(2, 12))
@@ -241,6 +256,8 @@ def selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingNa
         peakImg = init_movie[peak]
         peakDiff = im.getGrayscaleImageDiff_absolute(troughImg, peakImg)
         binaryPeakDiff = im.getBinaryJelly(peakDiff, lower_bound=0.05)
+        if np.sum(binaryCentroidDiff) > np.sum(binaryPeakDiff):
+            binaryPeakDiff = binaryCentroidDiff
         averagedDynamicRangeMaskedImg = im.dynamicRangeImg_AreaBased(relaxedImg, binaryPeakDiff, 5)
 
         dynamicRangeImgOutfile = dynamicRangeDir / 'dynamicRangeImg_{:03}.png'.format(peak + peak2InflectionDiff)
@@ -370,7 +387,6 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     global MAC
     MAC = macintosh
 
-
     preInitializationDf = pd.read_csv(str(pathOfPreInitializationDF))
     initializationStack = dm.getFrameFilePaths(pathOfInitializationStack)
 
@@ -392,6 +408,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     inflectionTestBinaryThreshold = None
     chosenSD = None   # not saved in final DF
     numConsecutiveDrops = 10
+    use_conserved_trough = False
 
     # static variables across all recordings
     movementThreshold4reinitialization = 20
@@ -425,6 +442,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
             [inflectionTestBinaryThreshold, 'the ideal threshold to locate the area of difference'],
             [chosenSD, 'the sd of the chosen test diff and threshold when they were initialized'],
             [numConsecutiveDrops, 'the number of consecutive drops needed to count something as a downturn'],
+            [use_conserved_trough, 'if True, the trough becomes conserved point of the pulse instead of the peak'],
 
             [movementThreshold4reinitialization,
              'number of pixels from one centroid to another to consider a jelly as moving.'],
@@ -453,6 +471,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
                    'inflectionTestBinaryThreshold',
                    'chosenSD',
                    'numConsecutiveDrops',
+                   'use_conserved_trough',
 
                    'movementThreshold4reinitialization',
                    'movementThreshold2KeepMoving',
@@ -482,7 +501,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     if DEBUG: print('getting peaksOnBinaryImage\n')
     # gets peak frame nums from binaryImageAreas
-    peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
+    peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff, use_conserved_trough = use_conserved_trough)
 
     saveAreasPlot(binaryImageAreas, peaksOnBinaryImage, areaPlotOutpath,
                   [peak2InflectionDiff, peak2InflectionDiff + 5, peak2TroughDiff],
@@ -500,7 +519,6 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     # gets peak2TroughDiff from peaksOnBinaryImage and binaryImageAreas
     troughsOnBinaryImage = dm.getTroughs(binaryImageAreas)
 
-
     if DEBUG: print('troughs: {}'.format(troughsOnBinaryImage))
 
     peak2TroughDiff = dm.likelyPostPeakTroughDiff(troughsOnBinaryImage, peaksOnBinaryImage)
@@ -515,25 +533,30 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     if CHIME: dm.chime(MAC, 'input time')
     while True:
 
+        diffsList = [peak2InflectionDiff, peak2InflectionDiff + 5, 0, peak2TroughDiff]
+        if use_conserved_trough:
+            diffsList = [x - peak2TroughDiff for x in diffsList]
         saveAreasPlot(binaryImageAreas, peaksOnBinaryImage, areaPlotOutpath,
-                      [peak2InflectionDiff, peak2InflectionDiff + 5, peak2TroughDiff],
-                      postPeakRefractoryPeriod)
+                      diffsList, postPeakRefractoryPeriod)
 
         print('Params to change: ')
         print('select \'1\' to change {} which is {}'.format('postPeakRefractoryPeriod', postPeakRefractoryPeriod))
         print('select \'2\' to change {} which is {}'.format('numConsecutiveDrops', numConsecutiveDrops))
         print('select \'3\' to change {} which is {}'.format('peak2InflectionDiff', peak2InflectionDiff))
         print('select \'4\' to change {} which is {}'.format('peak2TroughDiff', peak2TroughDiff))
-        print('or \'5\' to continue.')
+        print('select \'5\' to toggle {} which is {}'.format('use_conserved_trough', use_conserved_trough))
+        print('or \'6\' to continue.')
 
-        selectionVar = dm.getSelection([1, 2, 3, 4, 5])
+        selectionVar = dm.getSelection([1, 2, 3, 4, 5, 6])
 
         if selectionVar == '1':
             postPeakRefractoryPeriod = dm.reassignIntVariable(postPeakRefractoryPeriod, 'postPeakRefractoryPeriod')
         elif selectionVar == '2':
             numConsecutiveDrops = dm.reassignIntVariable(numConsecutiveDrops, 'numConsecutiveDrops')
 
-            peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold, numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff)
+            peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold,
+                                                numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff,
+                                                use_conserved_trough = use_conserved_trough)
             troughsOnBinaryImage = dm.getTroughs(binaryImageAreas)
             peak2TroughDiff = dm.likelyPostPeakTroughDiff(troughsOnBinaryImage, peaksOnBinaryImage)
             peak2InflectionDiff = dm.getLikelyInflectionDiff(binaryImageAreas, peaksOnBinaryImage)
@@ -543,6 +566,11 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
             peak2InflectionDiff = dm.reassignIntVariable(peak2InflectionDiff, 'peak2InflectionDiff')
         elif selectionVar == '4':
             peak2TroughDiff = dm.reassignIntVariable(peak2TroughDiff, 'peak2TroughDiff')
+        elif selectionVar == '5':
+            use_conserved_trough = not use_conserved_trough
+            peaksOnBinaryImage = downturnFinder(init_movie, postPeakRefractoryPeriod, lowerThreshold,
+                                                numConsecutiveDrops, peak2InflectionDiff, peak2TroughDiff,
+                                                use_conserved_trough=use_conserved_trough)
         else:
             break
 
@@ -564,7 +592,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
 
     if DEBUG: print('Running \'selectInflectionThresholdandDiff\'\n')
 
-    inflectionTestDiff, inflectionTestBinaryThreshold, chosenSD = selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir)
+    inflectionTestDiff, inflectionTestBinaryThreshold, chosenSD = selectInflectionThresholdandDiff(peaksOnBinaryImage, init_movie, recordingName, peak2InflectionDiff, peak2TroughDiff, use_conserved_trough, initializationOutputDir, angleArrImageDir, centroidDir, dynamicRangeDir)
 
     saveVariableParams()
 
@@ -580,6 +608,7 @@ def initialization_Main(pathOfPreInitializationDF, pathOfInitializationStack, re
     postInitiationDF['inflectionTestDiff'] =  inflectionTestDiff  # the number of frames after inflection point where the difference in calculated
     postInitiationDF['inflectionTestBinaryThreshold'] =  inflectionTestBinaryThreshold  # the ideal threshold to locate the area of difference
     postInitiationDF['numConsecutiveDrops'] =  numConsecutiveDrops  # the number of consecutive drops needed to count something as a downturn
+    postInitiationDF['use_conserved_trough'] = use_conserved_trough
 
     # static params for all recording
     postInitiationDF['movementThreshold4reinitialization'] =  movementThreshold4reinitialization  # number of pixels from one centroid to another to consider a jelly as moving.

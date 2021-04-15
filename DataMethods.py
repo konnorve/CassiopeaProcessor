@@ -139,7 +139,7 @@ def is_peak_side2side_robust(index, areas):
 
     return True
 
-def is_downturn(index, areas, numConsecutiveDrops):
+def is_downturn(areas):
     """
     Boolean returns True if index represents a downturn in area, false otherwise
     Looks to see that the next areas are decreasing for 'numConsecutiveDrops' frames in a row
@@ -147,12 +147,17 @@ def is_downturn(index, areas, numConsecutiveDrops):
     :param areas: 1 dimensional list of areas
     :return: True if index is peak, False if not.
     """
-    first = areas[index]
-    for j in range(1, numConsecutiveDrops):
-        if areas[index+j] < first:
-            first = areas[index+j]
-        else:
+    for i in range(0, len(areas)-1):
+        if areas[i+1] > areas[i]:
             return False
+    return True
+
+def is_downturn_end(areas):
+    for i in range(0, len(areas) - 2):
+        if areas[i + 1] > areas[i]:
+            return False
+    if areas[-2] > areas[-1]:
+        return False
     return True
 
 
@@ -204,21 +209,6 @@ def getPeaks_side2side_robust(areas, frameNums=None):
             peakFrameNums.append(frameNums[i])
 
     return peakFrameNums
-
-def getDownturns(areas, numConsecutiveDownturns, frameNums=None):
-    """
-    Gets all downturn frame nums
-    :param areas: list of jelly region areas (can try thresholded True areas at some point)
-    :param frameNums: list of corresponding frame nums to the areas.
-    :return: list of downturn frame nums
-    """
-    if frameNums is None: frameNums = range(len(areas))
-
-
-    downturnFrameNums = []
-    for i in range(len(areas) - numConsecutiveDownturns):
-        if is_downturn(i, areas, numConsecutiveDownturns):
-            downturnFrameNums.append(frameNums[i])
 
 
 def getTroughs(areas, frameNums=None):
