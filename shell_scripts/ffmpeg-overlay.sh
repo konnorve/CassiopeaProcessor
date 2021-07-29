@@ -29,7 +29,7 @@
 module load python/3.6
 module load gnu-parallel/2019.03.22
 
-parallel "dd if=/dev/zero of=overlay{}.img iflag=fullblock oflag=fullblock bs=3G count=25 && mkfs.ext3 -d overlay overlay{}.img" ::: {1$
+parallel "dd if=/dev/zero of=overlay{}.img iflag=fullblock bs=3G count=25 && mkfs.ext3 -d overlay overlay{}.img" ::: {1$
 
 #source activate myenv
 
