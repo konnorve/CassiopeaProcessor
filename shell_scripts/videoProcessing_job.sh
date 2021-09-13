@@ -1,6 +1,6 @@
 #!/bin/bash
 # Job name: ffmpeg_test
-#SBATCH --job-name=VPlgaga1_kve
+#SBATCH --job-name=VP_MarilynMonroe_Baseline
 #
 # Account:
 #SBATCH --account=fc_xenopus
@@ -10,7 +10,7 @@
 #
 #
 # Wall clock limit:
-#SBATCH --time=72:00:00
+#SBATCH --time=36:00:00
 #
 #SBATCH --mail-type=END,FAIL
 #
@@ -26,17 +26,12 @@
 module load gcc openmpi
 module load python
 module load gnu-parallel/2019.03.22
-source activate myenv
 
-mkdir /global/scratch/lilianzhang/tmp
-export TMPDIR=/global/scratch/lilianzhang/tmp # set TMPDIR
-mkdir -p $TMPDIR # ensure TMPDIR exists
+#source activate myenv
 
-POSTINIT_DF_PATH=/global/scratch/lilianzhang/Janis/20200726_Janis_606pm_cam1_1_PostInitialization.csv
-PARENTDIR="$(dirname "$POSTINIT_DF_PATH")"
-TEMPOUTDIR=$PARENTDIR/VP_stdout
+# Updating below paths lines not necessary, but good for keeping track
+JELLYPATH=/global/scratch/users/lilianzhang/RNASeq2/20210702/MarilynMonroe/Baseline/
+POSTINIT_DF_PATH=/global/scratch/users/lilianzhang/RNASeq2/20210702/MarilynMonroe/SD/MarilynMonroeSD_PostInitializationDF.csv
+PARENTDIR=/tmp/vp_data
 
-mkdir $TEMPOUTDIR
-
-parallel --results $TEMPOUTDIR python3 /global/home/groups/fc_xenopus/utils/CassiopeaProcessor/VideoProcessor_Main.py ::: $POSTINIT_DF_PATH ::: $(seq 60)
-
+parallel singularity exec --no-mount tmp --overlay overlay{}.img image_latest.sif /bin/bash vp_exec_script.sh ::: {1..24}
