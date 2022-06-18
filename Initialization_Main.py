@@ -3,7 +3,7 @@ from pathlib import Path
 import DataMethods as dm
 
 # should all be in the same recording directory from Savio (recordingOutputDir)
-recordingHomeDir = Path('/home/kve/Desktop/Labora/Harland_Lab/2021-04/RNAseq2/20210325/TaylorS')
+recordingHomeDir = Path('I:\Ganglia_Tracker_Data\\Acclimation\\20220423\\Lupita\\Baseline')
 
 #automatic procurement from home directories if labeled right
 pathOfPreInitializationDFDir = recordingHomeDir / 'Initialization_DF'
