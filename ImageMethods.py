@@ -90,15 +90,22 @@ def getJellyBinaryImageFromFile(imgfile):
 
 
 def findJellyRegion(binaryJellyImage):
+    """
+    Find the largest connected area through iteration.
+    :param binaryJellyImage: True/False array
+    :reuturn jelly: region properties
+    :return onEdge: boolean that checks if the jellyimage is on the Edge
+    """
 
-    labeledmask, numlabels = ndimage.label(binaryJellyImage, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+    labeledmask, numlabels = ndimage.label(binaryJellyImage, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]) #numlabels equal number of connected areas
 
-    dimensions = list(labeledmask.shape)
+    dimensions = list(labeledmask.shape) #dimension of the image
 
     height = dimensions[0]
     width = dimensions[1]
 
-    clusters = measure.regionprops(labeledmask)  # create regions
+    clusters = measure.regionprops(labeledmask)  # create regions(each of the connected area)
+    
     jelly = None  # the region that represents the jelly so far
     jellyarea = 0  # largest jelly area so far
     for i in range(0, numlabels):  # finds the jelly by finding which region is max area
