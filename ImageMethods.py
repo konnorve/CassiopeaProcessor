@@ -129,9 +129,8 @@ def findJellyRegion(binaryJellyImage):
 
 def findCentroid_regionProp(jellyRegion):
     """
-    param:
-        jellyRegion:
-    return: (x,y) tubple of coordinates of jelly region
+    :param jellyRegion: #jellyRegion, onEdge = findJellyRegion(binaryJellyImage)
+    :return: (x,y) tubple of coordinates of jelly region
     """
     centroid = list(jellyRegion.centroid)
 
