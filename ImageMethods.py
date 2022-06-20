@@ -82,7 +82,8 @@ def getJellyBinaryImageFromFile(imgfile):
 
     for y in range(binaryJellyImage.shape[0]):
         for x in range(binaryJellyImage.shape[1]):
-            if np.all(image[y][x]): binaryJellyImage[y][x] = True
+            if np.all(image[y][x]): 
+                binaryJellyImage[y][x] = True
 
     return binaryJellyImage
 
